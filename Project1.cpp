@@ -10,7 +10,9 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	Fl_Window win(800, 600, /*u8*/"Главное окно");
+	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); // для русского текста в консоли|для работы текста в окне приложения, в свойствах проекта указать /utf-8 и сохранить в кодировке юникод
+
+	Fl_Window win(800, 600, "Главное окно");
 	win.end();
 
 	win.show(argc, argv);
