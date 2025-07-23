@@ -1,95 +1,201 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+﻿////Игровое поле имеет фиксированный размер  - 5х5 клеточек. В каждой клеточке может располагаться "мина" (*) или пустое поле .
+//////
+//////Реализовать игровой процесс :
+//////1.	Вывод игрового поля на экран.
+//////2.	Разметка поля цветом.
+//////3.	Заполнение игрового поля(10 мин, остальные клеточки пустые) случайным образом с проверкой повторений.
+//////4.	Запись начального состояния игрового поля во внешний файл(расположение мин).
+//////5.	Возможность хода(максимум 25 ходов с проверкой на повторы) и заполнение использованных клеток.
+//////6.	Вывод подсказок о рядом расположенных свободных полей.
+//////7.	Игра ведется до трех жизней(3 мины).
+//////8.	Подсчет очков пользователя :
+//////a)	За каждую мину – минус 5 баллов.
+//////b)	За открытые «чистые» поля набавляются баллы в следующей последовательности : первые 5 полей – плюс 5 баллов за каждое поле; вторые 5 полей - плюс 10 баллов за каждое поле; третьи 5 полей – плюс 15 баллов за каждое поле и т.д.)
+//////9.	Дозапись конечного состояния игрового поля во внешний файл.
+//////10.	 Возможность повторить игру.
+//////11.	 Ведение списка рекордов с записью во внешний файл.
+//////12.	 Организовать дозапись результатов игры во внешний файл с учетом рейтинга.
+//////
+//////* Доп.задание: использовать таймер.
+//////- окончание игры по таймеру
+//////
+
+
 #include <iostream>
-#include <windows.h>
-#include <iomanip>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <ctime>
+#include <limits>
+#include <chrono>
+#include <thread>
+
+//////?#include <FL/Fl.H>
+//////
+//////#include <FL/Fl_Window.H>
+//////
+//////#include <FL/Fl_Box.H>
+//////
+//////#include <FL/Fl_Button.H>
+//////
+////
+
+
 
 using namespace std;
 
-enum ConsoleColor
+
+// Константы игры
+const int SIZE = 5;        // Поле 5x5
+const int MINES = 10;      // 10 мин на поле
+//const int MAX_MOVES = 25;  // Максимальное количество ходов
+//const int MAX_LIVES = 3;   // Максимальное количество жизней
+//const int BASE_POINTS = 5; // Базовые очки за открытие клетки
+//const int BONUS_POINTS = 50;// Бонус за правильную установку флага
+//const int PENALTY_POINTS = 20;// Штраф за неправильную установку флага
+
+// Структура для хранения состояния клетки
+struct Cell //структура клетка
 {
-	Black, Blue, Green, Cyan, Red, Magenta, Brown, LightGray, DarkGray,
-	LightBlue, LightGreen, LightCyan, LightRed, LightMagenta, Yellow, White
+    char value;     // содержимое клетки символы '0'-'8' или '*'
+    bool revealed;  // открыта ли клетка
+    bool flagged;   // помечена ли клетка флагом
 };
-void SetColor(int text, int background)
-{
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hStdOut, (WORD)((background << 4) | text));
+
+// Глобальные переменные
+Cell gameBoard[SIZE][SIZE];// игровое поле состоит из множества структур клетка (тип данных массива CELL)
+int score = 0;//текущий счет
+bool gameOver = false;//проигрыш
+bool gameWon = false;//победа
+
+// Прототипы функций
+void initializeGame();//инициализация игры
+void placeMines();//размещение мин
+void printBoard();//вывод на экран
+void clearScreen();//очистка консоли
+////********************************************************
+int main(/*int argc, char** argv*/) {
+
+
+
+
+
+    //SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); // для русского текста в консоли|для работы текста в окне приложения, в свойствах проекта указать /utf-8 и сохранить в кодировке юникод
+
+    //Fl_Window win(800, 600, "Главное окно");
+    //win.end();
+
+    //win.show(argc, argv);
+    //return Fl::run();
+
+
+
+
+
+////srand(time(NULL));
+    setlocale(LC_ALL, "ru");
+    initializeGame();//вызов функции инициализации
+    ////игровой цикл
+    while (!gameOver && !gameWon /*&& movesLeft > 0*/) //если не проиграл и есть в запасе ходы
+    {
+        clearScreen();//очищаем консоль 
+        printBoard();//выводим новое поле на экран
+
+        int x, y;//переменные для ввода координат
+        char action;//переменная для ввода действия (открыть клетку или поставить флажок на клетку с миной)
+        bool inputValid = false;//переменная для проверки корректности ввода данных
+
+        // Проверка ввода
+        while (!inputValid)
+        {
+            cout << endl;
+
+            cout << "Введите действие (r - открыть, f - флаг) и координаты (ряд столбец, 0-4): ";
+            ////проверка корректности ввода
+            if (!(cin >> action >> x >> y))
+            {
+                cout << "Ошибка ввода! Пожалуйста, введите данные в формате: [действие] [ряд] [столбец]" << endl;
+                continue;
+            }
+
+            if (action != 'r' && action != 'f') {
+                cout << "Неверное действие! Используйте 'r' для открытия или 'f' для установки флага." << endl;
+                continue;
+            }
+
+            if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) {
+                cout << "Неверные координаты! Допустимый диапазон: 0-" << SIZE - 1 << endl;
+                continue;
+            }
+
+            inputValid = true;
+        }
+    }
 }
-void GotoXY(int X, int Y)
+
+//*************************************************************************************************
+// Описание функции инициализация поля
+void initializeGame()
 {
-	HANDLE hConsole;
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD coord = { X, Y };
-	SetConsoleCursorPosition(hStdOut, coord);
+
+    for (int i = 0; i < SIZE; ++i)
+    {
+        for (int j = 0; j < SIZE; ++j)
+        {
+            gameBoard[i][j] = { '0', false, false };// игровое поле состоит из структур клетка, первоначально заполнено нулями
+        }
+    }
+    placeMines();//вызов функции размещение мин
+}
+//описание функции размещение мин
+void placeMines()
+{
+    srand(time(NULL));
+    int minesPlaced = 0;//переменная для подсчета количества мин
+    while (minesPlaced < MINES)
+    {
+        int x = rand() % SIZE;
+        int y = rand() % SIZE;
+
+        if (gameBoard[x][y].value != '*')
+        {
+            gameBoard[x][y].value = '*';//если клетка содержит *, то мины складываются до 10
+            minesPlaced++;
+        }
+    }
+}
+//описание функции вывода поля на экран
+void printBoard() {
+    cout << "   ";
+    for (int j = 0; j < SIZE; ++j) cout << j << " ";//пробелы между цифр верхнего ряда
+    cout << "\n";
+
+    for (int i = 0; i < SIZE; ++i) {
+        cout << i << " |";//вертикальная линия
+        for (int j = 0; j < SIZE; ++j) {
+            if (gameBoard[i][j].flagged) {
+                cout << "F ";//если поставили флаг
+            }
+            //else if (!gameBoard[i][j].revealed) {
+            //    cout << ". ";//если клетка еще не открыта закрываем все поле точками
+            //}
+            else {
+                if (gameBoard[i][j].value == '0') cout << "  ";
+                else cout << gameBoard[i][j].value << " ";
+            }
+        }
+        cout << "| " << i << endl;//вертикальная линия
+    }
+
+    cout << "   ";
+    for (int j = 0; j < SIZE; ++j) cout << j << " ";
+    cout << "\n";
+
 }
 
-const int rows = 9;
-const int cols = 9;
-void print_field1(char _field[rows][cols]);
-
-
-
-
-int main()
+void clearScreen()
 {
-	srand(time(NULL));
-	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);
-
-	//инициализация игрвого поля, в дальнейшем нолик будет заменятся на * для показывания мин
-	char field[rows][cols] = {};
-	for (short i = 0; i < rows; i++)
-	{
-		for (short j = 0; j < cols; j++)
-		{
-			field[i][j] = '0';
-		}
-	}
-	
-	print_field1(field);
-
-	system("pause");
+    system("cls");//очистка консоли
 }
 
-void print_field1(char _field[rows][cols])
-{
-	cout << "   ";
-	//вывод номеров
-	for (short j = 0; j < cols; j++)
-	{
-		cout << j << " ";
-	}
-	cout << endl;
-	cout << "  +";
-	for (short i = 0; i < cols * 2 - 1; i++)
-	{
-		cout << "-";
-	}
-	cout << "+" << endl;
-	//выводит поле и ставит | по краям
-	for (short i = 0; i < rows; i++)
-	{
-		cout << i << " |"; 
-		 for (short j = 0; j < cols; j++) 
-		 {
-			 cout << _field[i][j];
-			 if (j < cols - 1)//расставляет пробелы, и проверяет если символ не последний то ставит пробел
-			 {
-				cout << " ";
-			 }
-		 }
-		cout << "|\n";
-	}
-	cout << "  +";
-	for (short i = 0; i < cols * 2 - 1; i++)
-	{
-		cout << "-";
-	}
-	cout << "+" << endl;
-	
-}
 
 	
 	
