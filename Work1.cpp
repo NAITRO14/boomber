@@ -43,8 +43,8 @@ bool open(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col)
 int main()
 {
     srand(time(NULL));
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 
     char field[rows][cols];
     bool opened[rows][cols] = { false };
@@ -61,13 +61,15 @@ int main()
     int moves = 0;
     bool game_over = false;
 
+    string input;
+    int r, c;
+    bool hit;
     while (moves < max_moves && !game_over)
     {
         print_field1(field, opened);
 
-        string input;
-        cout << "Enter a row and a col(row,col)" << endl;
-        cout << "Enter - ";
+        cout << "Введите размеры(стобец и строку)" << endl;
+        cout << "Ввод: ";
         getline(cin, input);
         system("cls");
         // проверка на ввод, чтоб длина строки была не больше 2 символов и вводилось строка столбец
@@ -75,15 +77,15 @@ int main()
         {
             continue;
         }
-        int r = input[0] - '0';
-        int c = input[1] - '0';
+        r = input[0]-1 - '0';
+        c = input[1]-1 - '0';
 
         if (opened[r][c])
         {
             continue;          // Если уже открывали — повтор ввода
         }
 
-        bool hit = open(field, opened, r, c);
+        hit = open(field, opened, r, c);
         moves++;
 
         if (hit)
@@ -130,7 +132,7 @@ void place_mines(char _field[rows][cols])
 void print_field1(char _field[rows][cols], bool _opened[rows][cols])
 {
     cout << "   ";  
-    for (int j = 0; j < cols; j++)
+    for (int j = 1; j < cols+1; j++)
     {
         cout << j << " ";   // Верхняя строка с номерами столбцов
         
@@ -144,7 +146,7 @@ void print_field1(char _field[rows][cols], bool _opened[rows][cols])
     cout << "+\n";
     for (int i = 0; i < rows; i++) 
     {
-        cout << i << " |";
+        cout << i+1 << " |";
         for (int j = 0; j < cols; j++)
         {
             if (_opened[i][j])
@@ -188,14 +190,14 @@ void save_field_to_file(char _field[rows][cols], const char* _filename)
 
     if (!file)
     {
-        cout << "Error opening the file for recording!" << endl;
+        cout << "Ошибка записи !" << endl;
         return;
     }
     else {
 
         // Записываем номера столбцов
         fprintf(file, "   ");
-        for (short j = 0; j < cols; j++)
+        for (short j = 1; j < cols+1; j++)
         {
             fprintf(file, "%d ", j);
         }
@@ -212,7 +214,7 @@ void save_field_to_file(char _field[rows][cols], const char* _filename)
         // Записываем строки поля
         for (short i = 0; i < rows; i++)
         {
-            fprintf(file, "%d |", i); // Номер строки
+            fprintf(file, "%d |", i+1); // Номер строки
             for (short j = 0; j < cols; j++)
             {
                 fprintf(file, "%c", _field[i][j]); // Символ поля
@@ -233,7 +235,7 @@ void save_field_to_file(char _field[rows][cols], const char* _filename)
         fprintf(file, "+\n");
     }
     fclose(file); // Закрываем файл
-    cout << "The playing field has been successfully saved to a file: " << "MINES.txt" << endl;
+    cout << "Игровое поле успешно сохранено в файл: " << "MINES.txt" << endl;
 }
 
 bool open(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col)
