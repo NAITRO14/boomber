@@ -99,7 +99,7 @@ int main()
                 }
             }
             print_field1(field, opened);
-            save_field_to_file(field, "MINES.txt");
+            
             break;  // Конец игры
         }
     }
@@ -126,6 +126,7 @@ void place_mines(char _field[rows][cols])
             mines_placed++;
         }
     }
+    save_field_to_file(_field, "MINES.txt");
 }
 
 
@@ -143,6 +144,7 @@ void print_field1(char _field[rows][cols], bool _opened[rows][cols])
         cout << "-"; // Верхняя рамка
        
     }
+    //--------------
     cout << "+\n";
     for (int i = 0; i < rows; i++) 
     {
@@ -151,14 +153,13 @@ void print_field1(char _field[rows][cols], bool _opened[rows][cols])
         {
             if (_opened[i][j])
             {   // Если клетка открыта
-                char ch = _field[i][j];
 
-                if (ch == '*')
+                if (_field[i][j] == '*')
                 {
                    // Мина
-                    cout << ch;
+                    cout << _field[i][j];
                 }
-                else if (ch == '0')
+                else if (_field[i][j] == '0')
                 {
                     // Пустая клетка
                     cout << '-';
@@ -177,11 +178,11 @@ void print_field1(char _field[rows][cols], bool _opened[rows][cols])
         cout << "|\n";
     }
     cout << "  +";   
-      for (int i = 0; i < cols * 2 - 1; i++)
-      {
-          cout << "-"; // Нижняя рамка
-      }
-      cout << "+\n";
+    for (int i = 0; i < cols * 2 - 1; i++)
+    {
+        cout << "-"; // Нижняя рамка
+    }
+    cout << "+\n";
 }
 
 void save_field_to_file(char _field[rows][cols], const char* _filename)
@@ -240,6 +241,6 @@ void save_field_to_file(char _field[rows][cols], const char* _filename)
 
 bool open(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col)
 {
-   _opened[_row][_col] = true;
+    _opened[_row][_col] = true;
     return _field[_row][_col] == '*';
 }
