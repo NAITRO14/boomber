@@ -27,19 +27,20 @@ void GotoXY(int X, int Y)
     SetConsoleCursorPosition(hStdOut, coord);
 }
 
-const int rows = 5;         
-const int cols = 5;
+const int rows = 10;         
+const int cols = 10;
 const int mines_count = 10;
 const int max_moves = 15;   
 
 void place_mines(char _field[rows][cols]);
 void print_field1(char _field[rows][cols], bool _opened[rows][cols]);
 void save_field_to_file(char _field[rows][cols], const char* _filename);
+void open_empty(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col);
 // true если мина, false если безопасно
 bool open(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col);
+bool inbounds(int row, int col);
 
 
-// Точка входа
 int main()
 {
     srand(time(NULL));
@@ -57,7 +58,35 @@ int main()
             field[i][j] = '0';
         }
     }
-    place_mines(field);      // расставляем мины
+    place_mines(field);
+
+    // такие же команды что и в функции по открытию пустых клеток
+    int dx[] = { -1,-1,-1, 0, 0, 1, 1, 1 };
+    int dy[] = { -1, 0, 1,-1, 1,-1, 0, 1 };
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            if (field[i][j] == '*')
+            {
+                continue;//мина пропускаем
+            }
+            int count = 0;
+            for (int k = 0; k < 8; k++)
+            {
+                int num1 = i + dx[k], num2 = j + dy[k];// помогает проверять соседние клетки тожже нейронка прикольно придумала, взял у нее
+                if (inbounds(num1,num2) && field[num1][num2] == '*')//если мина счетчик +
+                {
+                    count++;
+                }
+            }
+            field[i][j] = count + '0';// записывает кол во мин в пустую клетку
+        }
+    }
+
+
+
+
     int moves = 0;
     bool game_over = false;
 
@@ -80,9 +109,14 @@ int main()
         r = input[0]-1 - '0';
         c = input[1]-1 - '0';
 
+        if (r < 0 || r >= rows || c < 0 || c >= cols)
+        {
+            continue;
+        }
+
         if (opened[r][c])
         {
-            continue;          // Если уже открывали — повтор ввода
+            continue;          
         }
 
         hit = open(field, opened, r, c);
@@ -106,8 +140,7 @@ int main()
 
     if (!game_over && moves >= max_moves)
     {
-        print_field1(field, opened);
-      
+        print_field1(field, opened);      
     }
 
 
@@ -163,7 +196,11 @@ void print_field1(char _field[rows][cols], bool _opened[rows][cols])
                 {
                     // Пустая клетка
                     cout << '-';
-                }      
+                }
+                else
+                {
+                    cout << ch;
+                }
             }
             else
             {                 
@@ -188,14 +225,14 @@ void print_field1(char _field[rows][cols], bool _opened[rows][cols])
 void save_field_to_file(char _field[rows][cols], const char* _filename)
 {
     FILE* file = fopen("MINES.txt", "w");
-
     if (!file)
     {
         cout << "Ошибка записи !" << endl;
         return;
     }
-    else {
-
+    else
+    {
+     
         // Записываем номера столбцов
         fprintf(file, "   ");
         for (short j = 1; j < cols+1; j++)
@@ -220,9 +257,7 @@ void save_field_to_file(char _field[rows][cols], const char* _filename)
             {
                 fprintf(file, "%c", _field[i][j]); // Символ поля
                 if (j < cols - 1)
-                {
                     fprintf(file, " "); // Пробел между символами
-                }
             }
             fprintf(file, "|\n"); // Закрывающая граница строки
         }
@@ -235,12 +270,56 @@ void save_field_to_file(char _field[rows][cols], const char* _filename)
         }
         fprintf(file, "+\n");
     }
-    fclose(file); // Закрываем файл
-    cout << "Игровое поле успешно сохранено в файл: " << "MINES.txt" << endl;
+    fclose(file);
+    cout << "The playing field has been successfully saved to a file: MINES.txt" << endl;
 }
+
+void open_empty(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col)
+{
+    if (!inbounds(_row, _col))
+    {
+        return;
+    }
+    if (_opened[_row][_col])
+    {
+        return;
+    }
+    _opened[_row][_col] = true;
+    if (_field[_row][_col] != '0')
+    {
+        return;
+    }
+    // массивы для проверки мин вокруг открытой клетки проще говоря проверка в дальнейшем 8 клеток вокруг квадратика
+    int dx[] = { -1, -1, -1,  0, 0, 1, 1, 1 };
+    int dy[] = { -1,  0,  1, -1, 1,-1, 0, 1 };
+    // вызываем функцию для открытия соседних клеток
+    for (int k = 0; k < 8; k++)
+    {
+        open_empty(_field, _opened, _row + dx[k], _col + dy[k]);
+    }
+}
+
+bool inbounds(int row, int col)
+{
+    return row >= 0 && row < rows && col >= 0 && col < cols;
+}
+
+
 
 bool open(char _field[rows][cols], bool _opened[rows][cols], int _row, int _col)
 {
-    _opened[_row][_col] = true;
-    return _field[_row][_col] == '*';
+    if (_field[_row][_col] == '*')
+    {
+        _opened[_row][_col] = true;
+        return true; // мина
+    }
+    else if (_field[_row][_col] == '0')
+    {
+        open_empty(_field, _opened, _row, _col);
+    }
+    else
+    {
+        _opened[_row][_col] = true;
+    }
+    return false;
 }
