@@ -47,7 +47,7 @@ void choose_level(Fl_Widget* w, void* data);
 
 int main(int argc, char** argv)
 {
-	HideConsole();
+	ShowConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
 	Fl_Window win(1000, 600, "игра");
 
