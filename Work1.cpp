@@ -24,6 +24,10 @@ void GotoXY(int X, int Y) {
     SetConsoleCursorPosition(hStdOut, coord);
 }
 
+//движение вокруг клетки
+int dx[] = { -1,-1,-1, 0, 0, 1, 1, 1 };
+int dy[] = { -1, 0, 1,-1, 1,-1, 0, 1 };
+
 // Структура для хранения параметров уровня сложности
 struct GameLevel {
     int rows;
@@ -34,13 +38,11 @@ struct GameLevel {
     string name;
 };
 
-const GameLevel levels[] = {
-    {10, 10, 10, 50, 3, "легкий"},    // Легкий уровень
-    {15, 15, 23, 75, 2, "средний"},   // Средний уровень
-    {20, 25, 50, 100, 1, "сложный"}   // Сложный уровень
+GameLevel levels[] = {
+    {10, 10, 10, 50, 3, "легкий"},    
+    {15, 15, 23, 75, 2, "средний"},   
+    {20, 25, 50, 100, 1, "сложный"}  
 };
-
-const int LEVELS_COUNT = sizeof(levels) / sizeof(levels[0]);
 
 void place_mines(char** _field, int rows, int cols, int mines_count);
 void print_field1(char** _field, bool** _opened, int rows, int cols);
@@ -54,9 +56,9 @@ int main() {
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 
-    // Выбор уровня сложности
+    // Вывод уровней сложности
     cout << "Выберите уровень сложности:" << endl;
-    for (int i = 0; i < LEVELS_COUNT; i++) {
+    for (int i = 0; i < 3; i++) {
         cout << i + 1 << ". " << levels[i].name
             << " (" << levels[i].rows << "x" << levels[i].cols
             << ", мин: " << levels[i].mines_count << ")" << endl;
@@ -64,11 +66,12 @@ int main() {
 
     int choice;
     do {
-        cout << "Ваш выбор (1-" << LEVELS_COUNT << "): ";
+        cout << "Ваш выбор (1-3): ";
         cin >> choice;
         cin.ignore(); // Очищаем буфер ввода
-    } while (choice < 1 || choice > LEVELS_COUNT);
+    } while (choice < 1 || choice > 3);
 
+    //Взять параметры из структуры
     const GameLevel& level = levels[choice - 1];
     int rows = level.rows;
     int cols = level.cols;
@@ -90,8 +93,7 @@ int main() {
 
     place_mines(field, rows, cols, mines_count);
 
-    int dx[] = { -1,-1,-1, 0, 0, 1, 1, 1 };
-    int dy[] = { -1, 0, 1,-1, 1,-1, 0, 1 };
+    
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             if (field[i][j] == '*') continue;
@@ -127,6 +129,7 @@ int main() {
             continue;
         }
 
+        //привод цифры к строке
         r = input[0] - '0' - 1;
         c = input[1] - '0' - 1;
 
