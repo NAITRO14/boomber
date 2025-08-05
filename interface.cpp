@@ -11,7 +11,48 @@
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
+#include <FL/fl_draw.H>
 using namespace std;
+
+//создать свой класс, со своими параметрами кнопи
+class MyButton : public Fl_Button {
+public:
+	//параметры кнопки
+	MyButton(int X, int Y, int W, int H, const char* L = 0)
+		: Fl_Button(X, Y, W, H, L) 
+	{
+		color(fl_rgb_color(169, 169, 169));
+		selection_color(fl_rgb_color(100, 100, 105));
+
+	}
+	
+	//обработка событий наведения
+	int handle(int event) override {
+		switch (event)
+		{
+		case FL_ENTER:
+		{
+			color(fl_rgb_color(100, 100, 105));
+			redraw();
+			return 1;
+		}
+		case FL_LEAVE:
+		{
+			color(fl_rgb_color(169, 169, 169));
+			redraw();
+			return 1;
+		}
+		}
+
+		return Fl_Button::handle(event);
+	}
+
+	void reset_state() {
+		color(fl_rgb_color(169, 169, 169));
+		redraw();
+	}
+
+};
 
 //структуры определения игры
 struct GameLevel {
@@ -47,34 +88,35 @@ void choose_level(Fl_Widget* w, void* data);
 
 int main(int argc, char** argv)
 {
-	ShowConsole();
+	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
 	Fl_Window win(1000, 600, "игра");
+	win.color(fl_rgb_color(192, 192, 192));
 
 	//группа приветственного меню (0)
 	Fl_Group* helloWin = new Fl_Group(0, 0, 1000, 600);
-	Fl_Button begin(435.5, 250, 125, 60, "Начать");
+	MyButton begin(435.5, 250, 125, 60, "Начать");
 	begin.callback(toGameMenu, helloWin->parent());
 	helloWin->end();
 
 	//группа игрового меню (1)
 	Fl_Group* mainMenu = new Fl_Group(0, 0, 1000, 600);
-	Fl_Button start(100, 150, 150, 75, "Начать игру");
-	Fl_Button rules(100, 250, 150, 75, "Правила");
-	Fl_Button exit(100, 350, 150, 75, "Выход");
-	exit.callback(exitf, nullptr);
+	MyButton start(100, 150, 150, 75, "Начать игру");
+	MyButton rules(100, 250, 150, 75, "Правила");
+	MyButton exit(100, 350, 150, 75, "Выход");
 	start.callback(toGameSettings, &win);
+	exit.callback(exitf, nullptr);
 	mainMenu->hide();
 	mainMenu->end();
 
 	//Группа настройки игры(2)
 	Fl_Group* game_settings = new Fl_Group(0, 0, 1000, 600);
 
-	Fl_Button easy(175, 150, 150, 70, "Легко");
-	Fl_Button normal(425, 150, 150, 70, "Нормально");
-	Fl_Button hard(675, 150, 150, 70, "Сложно");
+	MyButton easy(175, 150, 150, 70, "Легко");
+	MyButton normal(425, 150, 150, 70, "Нормально");
+	MyButton hard(675, 150, 150, 70, "Сложно");
 
-	Fl_Button back(9, 531, 125, 60, "В меню");
+	MyButton back(9, 531, 125, 60, "В меню");
 
 	back.callback(toGameMenu, &win);
 	easy.callback(choose_level, &win);
@@ -92,17 +134,31 @@ int main(int argc, char** argv)
 void toGameMenu(Fl_Widget* w, void* data)
 {
 	Fl_Window* win = (Fl_Window*)data;
+	Fl_Group* group = (Fl_Group*)win->child(1);
+	MyButton* but = NULL;
 	if (win->child(0)->visible())
 	{
 		win->child(0)->hide();
 		win->child(1)->show();
+		for (short i = 0; i < group->children(); i++)
+		{
+			but = (MyButton*)group->child(i);
+			but->reset_state();
+		}
 	}
 	else if(win->child(2)->visible())
 	{
 		win->child(2)->hide();
 		win->child(1)->show();
 		choose_level(w, data);
+		for (short i = 0; i < group->children(); i++)
+		{
+			but = (MyButton*)group->child(i);
+			but->reset_state();
+		}
 	}
+
+
 }
 
 void exitf(Fl_Widget* w, void* data)
@@ -113,6 +169,14 @@ void exitf(Fl_Widget* w, void* data)
 void toGameSettings(Fl_Widget* w, void* data)
 {
 	Fl_Window* win = (Fl_Window*)data;
+	Fl_Group* group = (Fl_Group*)win->child(2);
+	MyButton* but = NULL;
+
+	for (short i = 0; i < group->children(); i++)
+	{
+		but = (MyButton*)group->child(i);
+		but->reset_state();
+	}
 	win->child(1)->hide();
 	win->child(2)->show();
 }
@@ -126,7 +190,7 @@ void choose_level(Fl_Widget* w, void* data)
 
 	for (short i = 0; i < 3; i++)
 	{
-		group->child(i)->color(FL_WHITE);
+		group->child(i)->color(fl_rgb_color(169, 169, 169));
 	}
 
 	if (w->label() == "Легко")
@@ -156,3 +220,5 @@ void choose_level(Fl_Widget* w, void* data)
 
 	win->redraw();
 }
+
+
