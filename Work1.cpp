@@ -19,18 +19,8 @@ void SetColor(int text, int background) {
     SetConsoleTextAttribute(hStdOut, (WORD)((background << 4) | text));
 }
 
-void GotoXY(int X, int Y) {
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    COORD coord = { (SHORT)X, (SHORT)Y };
-    SetConsoleCursorPosition(hStdOut, coord);
-}
-
-//движение вокруг клетки
-int dx[] = { -1,-1,-1, 0, 0, 1, 1, 1 };
-int dy[] = { -1, 0, 1,-1, 1,-1, 0, 1 };
-
 // Структура для хранения параметров уровня сложности
-struct GameLevel 
+struct GameLevel
 {
     int rows;
     int cols;
@@ -38,15 +28,18 @@ struct GameLevel
     string name;
 };
 
-GameLevel levels[] = 
+const GameLevel levels[] =
 {
-    {10, 10, 10, 50, 3, "легкий"},    
-    {15, 15, 23, 75, 2, "средний"},   
-    {20, 25, 50, 100, 1, "сложный"}  
+    {10, 10, 10, "легкий"},
+    {15, 15, 23, "средний"},
+    {20, 25, 50, "сложный"}
 };
 
-void place_mines(char** _field, int rows, int cols, int mines_count);
-void print_field1(char** _field, bool** _opened, int rows, int cols);
+const int LEVELS_COUNT = sizeof(levels) / sizeof(levels[0]);
+
+// Прототипы функций
+void place_mines(char** _field, int rows, int cols, int mines_count, int first_row, int first_col);
+void print_field1(char** _field, bool** _opened, int rows, int cols, int moves);
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 bool open(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
@@ -54,30 +47,26 @@ bool inbounds(int row, int col, int rows, int cols);
 void initialize_field(char** field, bool** opened, int rows, int cols);
 void calculate_numbers(char** field, int rows, int cols);
 
-int main() 
-{
+int main() {
     srand(time(NULL));
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    // Вывод уровней сложности
+    // Выбор уровня сложности
     cout << "Выберите уровень сложности:" << endl;
-    for (int i = 0; i < 3; i++) 
-    {
+    for (int i = 0; i < LEVELS_COUNT; i++) {
         cout << i + 1 << ". " << levels[i].name
             << " (" << levels[i].rows << "x" << levels[i].cols
             << ", мин: " << levels[i].mines_count << ")" << endl;
     }
 
     int choice;
-    do 
-    {
-        cout << "Ваш выбор (1-3): ";
+    do {
+        cout << "Ваш выбор (1-" << LEVELS_COUNT << "): ";
         cin >> choice;
         cin.ignore(); // Очищаем буфер ввода
-    } while (choice < 1 || choice > 3);
+    } while (choice < 1 || choice > LEVELS_COUNT);
 
-    //Взять параметры из структуры
     const GameLevel& level = levels[choice - 1];
     int rows = level.rows;
     int cols = level.cols;
@@ -86,46 +75,14 @@ int main()
     // Динамическое создание массивов
     char** field = new char* [rows];
     bool** opened = new bool* [rows];
-    for (int i = 0; i < rows; i++) 
-    {
-        field[i] = new char[cols];
-        opened[i] = new bool[cols];
-        for (int j = 0; j < cols; j++) 
-        {
-            field[i][j] = '0';
-            opened[i][j] = false;
-        }
-    }
-
-    place_mines(field, rows, cols, mines_count);
-
-    int count, num1, num2;
-    for (int i = 0; i < rows; i++) 
-    {
-        for (int j = 0; j < cols; j++) 
-        {
-            if (field[i][j] == '*') continue;
-            count = 0;
-            for (int k = 0; k < 8; k++) 
-            {
-                num1 = i + dx[k];
-                num2 = j + dy[k];
-                if (inbounds(num1, num2, rows, cols) && field[num1][num2] == '*') 
-                {
-                    count++;
-                }
-            }
-            field[i][j] = count + '0';
-        }
-    }
+    initialize_field(field, opened, rows, cols);
 
     int moves = 0;
     bool game_over = false;
     int first_row = -1, first_col = -1;
 
-    while (moves < max_moves && !game_over && lives > 0) 
-    {
-        print_field1(field, opened, rows, cols);
+    while (!game_over) {
+        print_field1(field, opened, rows, cols, moves);
         cout << "Уровень: " << level.name << endl;
         cout << "Ходы: " << moves << endl;
 
@@ -134,23 +91,23 @@ int main()
         string input;
         getline(cin, input);
 
-        if (input.length() != 2 || !isdigit(input[0]) || !isdigit(input[1])) 
-        {
-            cout << "Ошибка: введите 2 цифры (например, 12 для строки 1 столбца 2)" << endl;
+        stringstream ss(input);
+        int r, c;
+        if (!(ss >> r >> c)) {
+            cout << "Ошибка: введите два числа через пробел " << endl;
             continue;
         }
 
-        //привод цифры к строке
-        r = input[0] - '0' - 1;
-        c = input[1] - '0' - 1;
+        // Преобразуем в индексы массива (1-based -> 0-based)
+        r--; c--;
 
-        if (r < 0 || r >= rows || c < 0 || c >= cols) 
-        {
+        // Проверяем границы
+        if (!inbounds(r, c, rows, cols)) {
             cout << "Ошибка: координаты вне диапазона (1-" << rows << " 1-" << cols << ")" << endl;
             continue;
         }
 
-        if (opened[r][c]) 
+        if (opened[r][c])
         {
             cout << "Эта клетка уже открыта!" << endl;
             continue;
@@ -168,46 +125,24 @@ int main()
         bool hit = open(field, opened, rows, cols, r, c);
         moves++;
 
-        if (hit) 
+        if (hit)
         {
-            lives--;
-            if (lives > 0) 
+            // Открываем все мины при проигрыше
+            for (int i = 0; i < rows; i++)
             {
-                cout << "Вы нашли мину! Осталось жизней: " << lives << endl;
-                opened[r][c] = true;
-                print_field1(field, opened, rows, cols);
-                cout << "Продолжаем игру..." << endl;
-                Sleep(2000);
-                system("cls");
-            }
-            else {
-                for (int i = 0; i < rows; ++i) 
+                for (int j = 0; j < cols; j++)
                 {
-                    for (int j = 0; j < cols; ++j) 
-                    {
-                        opened[i][j] = true;
-                    }
+                    if (field[i][j] == '*') { opened[i][j] = true; }
                 }
-                print_field1(field, opened, rows, cols);
-                cout << "Игра окончена! Вы исчерпали все жизни." << endl;
-                game_over = true;
             }
-        }
-    }
-
-    if (!game_over && lives > 0) 
-    {
-        if (moves >= max_moves) 
-        {
-            cout << "Поздравляем! Вы сделали " << max_moves << " ходов и выиграли!" << endl;
-        }
-        else {
-            cout << "Игра завершена." << endl;
+            print_field1(field, opened, rows, cols, moves);
+            cout << "Игра окончена! Вы наступили на мину." << endl;
+            game_over = true;
         }
     }
 
     // Освобождение памяти
-    for (int i = 0; i < rows; i++) 
+    for (int i = 0; i < rows; i++)
     {
         delete[] field[i];
         delete[] opened[i];
@@ -229,15 +164,19 @@ void initialize_field(char** field, bool** opened, int rows, int cols) {
     }
 }
 
-void place_mines(char** _field, int rows, int cols, int mines_count) 
-{
+void place_mines(char** _field, int rows, int cols, int mines_count, int first_row, int first_col) {
     int mines_placed = 0;
-    while (mines_placed < mines_count) 
-    {
+    while (mines_placed < mines_count) {
         int x = rand() % rows;
         int y = rand() % cols;
-        if (_field[x][y] != '*') 
-        {
+
+        // Не ставим мину в первую клетку и в соседние клетки
+        if ((x == first_row && y == first_col) ||
+            (abs(x - first_row) <= 1 && abs(y - first_col) <= 1)) {
+            continue;
+        }
+
+        if (_field[x][y] != '*') {
             _field[x][y] = '*';
             mines_placed++;
         }
@@ -245,54 +184,68 @@ void place_mines(char** _field, int rows, int cols, int mines_count)
     save_field_to_file(_field, rows, cols, "MINES.txt");
 }
 
-void print_field1(char** _field, bool** _opened, int rows, int cols) 
-{
-    cout << "   ";
-    for (int j = 1; j < cols + 1; j++) 
-    {
-        cout << j % 10 << " "; // Выводим только последнюю цифру для двузначных чисел
+void calculate_numbers(char** field, int rows, int cols) {
+    int dx[] = { -1,-1,-1, 0, 0, 1, 1, 1 };
+    int dy[] = { -1, 0, 1,-1, 1,-1, 0, 1 };
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (field[i][j] == '*') continue;
+
+            int count = 0;
+            for (int k = 0; k < 8; k++) {
+                int ni = i + dx[k], nj = j + dy[k];
+                if (inbounds(ni, nj, rows, cols) && field[ni][nj] == '*') {
+                    count++;
+                }
+            }
+            field[i][j] = '-';
+
+        }
     }
-    cout << "\n  +";
-    for (int i = 0; i < cols * 2 - 1; i++) 
-    {
+}
+
+void print_field1(char** _field, bool** _opened, int rows, int cols, int moves) {
+
+    Sleep(2000);
+    system("cls");
+
+    // Вывод номеров столбцов (двузначные числа)
+    cout << "    ";
+    for (int j = 1; j <= cols; j++) {
+        cout << setw(2) << j << " ";
+    }
+    cout << "\n   +";
+    for (int i = 0; i < cols * 3 - 1; i++) {
         cout << "-";
     }
     cout << "+\n";
 
-    for (int i = 0; i < rows; i++) 
-    {
-        cout << (i + 1) % 10 << " |"; // Выводим только последнюю цифру для двузначных чисел
-        for (int j = 0; j < cols; j++) 
-        {
+    // Вывод строк поля
+    for (int i = 0; i < rows; i++) {
+        cout << setw(2) << i + 1 << " |"; // Номер строки
+        for (int j = 0; j < cols; j++) {
             if (_opened[i][j]) {
-                if (_field[i][j] == '*') 
-                {
-                    cout << _field[i][j];
+                if (_field[i][j] == '*') {
+                    cout << " * ";
                 }
-                else if (_field[i][j] == '0') 
-                {
-                    cout << '.';
+                else if (_field[i][j] == '.') {
+                    cout << " . ";
                 }
-                else 
-                {
-                    cout << _field[i][j];
+                else {
+                    cout << " " << _field[i][j] << " ";
                 }
             }
-            else 
-            {
-                cout << "0";
-            }
-            if (j < cols - 1) 
-            {
-                cout << " ";
+            else {
+                cout << " 0 ";
             }
         }
         cout << "|\n";
     }
 
-    cout << "  +";
-    for (int i = 0; i < cols * 2 - 1; i++) 
-    {
+    // Нижняя граница
+    cout << "   +";
+    for (int i = 0; i < cols * 3 - 1; i++) {
         cout << "-";
     }
     cout << "+\n";
@@ -300,47 +253,37 @@ void print_field1(char** _field, bool** _opened, int rows, int cols)
 
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename) {
     FILE* file = fopen(_filename, "w");
-    if (!file) 
-    {
-        cout << "Ошибка записи !" << endl;
+    if (!file) {
+        cout << "Ошибка записи!" << endl;
         return;
     }
 
     // Записываем номера столбцов
-    fprintf(file, "   ");
-    for (int j = 1; j <= cols; j++) 
-    {
-        fprintf(file, "%d ", j % 10); // Только последняя цифра для больших чисел
+    fprintf(file, "    ");
+    for (int j = 1; j <= cols; j++) {
+        fprintf(file, "%2d ", j);
     }
     fprintf(file, "\n");
 
     // Верхняя граница
-    fprintf(file, "  +");
-    for (int i = 0; i < cols * 2 - 1; i++) 
-    {
+    fprintf(file, "   +");
+    for (int i = 0; i < cols * 3 - 1; i++) {
         fprintf(file, "-");
     }
     fprintf(file, "+\n");
 
     // Записываем строки поля
-    for (int i = 0; i < rows; i++) 
-    {
-        fprintf(file, "%d |", (i + 1) % 10); // Номер строки
-        for (int j = 0; j < cols; j++) 
-        {
-            fprintf(file, "%c", _field[i][j]);
-            if (j < cols - 1) 
-            {
-                fprintf(file, " ");
-            }
+    for (int i = 0; i < rows; i++) {
+        fprintf(file, "%2d |", i + 1); // Номер строки
+        for (int j = 0; j < cols; j++) {
+            fprintf(file, " %c ", _field[i][j]);
         }
         fprintf(file, "|\n");
     }
 
     // Нижняя граница
-    fprintf(file, "  +");
-    for (int i = 0; i < cols * 2 - 1; i++) 
-    {
+    fprintf(file, "   +");
+    for (int i = 0; i < cols * 3 - 1; i++) {
         fprintf(file, "-");
     }
     fprintf(file, "+\n");
@@ -348,41 +291,30 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
     fclose(file);
 }
 
-void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
-{
-    if (!inbounds(_row, _col, rows, cols)) 
-    {
-        return;
-    }
-    if (_opened[_row][_col]) 
-    {
-        return;
-    }
-    _opened[_row][_col] = true;
-    if (_field[_row][_col] != '0') 
-    {
-        return;
-    }
+void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col) {
+    if (!inbounds(_row, _col, rows, cols)) return;
+    if (_opened[_row][_col]) return;
 
-    for (int k = 0; k < 8; k++) 
-    {
+    _opened[_row][_col] = true;
+    if (_field[_row][_col] != '.') return;
+
+    int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+    int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+
+    for (int k = 0; k < 8; k++) {
         open_empty(_field, _opened, rows, cols, _row + dx[k], _col + dy[k]);
     }
 }
 
-bool open(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
-{
-    if (_field[_row][_col] == '*') 
-    {
+bool open(char** _field, bool** _opened, int rows, int cols, int _row, int _col) {
+    if (_field[_row][_col] == '*') {
         _opened[_row][_col] = true;
         return true; // мина
     }
-    else if (_field[_row][_col] == '0') 
-    {
+    else if (_field[_row][_col] == '.') {
         open_empty(_field, _opened, rows, cols, _row, _col);
     }
-    else 
-    {
+    else {
         _opened[_row][_col] = true;
     }
     return false;
