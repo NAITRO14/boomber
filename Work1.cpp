@@ -20,24 +20,21 @@ void SetColor(int text, int background) {
 }
 
 // Структура для хранения параметров уровня сложности
-struct GameLevel
-{
+struct GameLevel {
     int rows;
     int cols;
     int mines_count;
     string name;
 };
 
-const GameLevel levels[] =
-{
-    {10, 10, 10, "легкий"},
-    {15, 15, 23, "средний"},
-    {20, 25, 50, "сложный"}
+const GameLevel levels[] = {
+    {10, 10, 10, "легкий"},    // Легкий уровень
+    {15, 15, 23, "средний"},   // Средний уровень
+    {20, 25, 50, "сложный"}    // Сложный уровень
 };
 
 const int LEVELS_COUNT = sizeof(levels) / sizeof(levels[0]);
 
-// Прототипы функций
 void place_mines(char** _field, int rows, int cols, int mines_count, int first_row, int first_col);
 void print_field1(char** _field, bool** _opened, int rows, int cols, int moves);
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
@@ -87,14 +84,14 @@ int main() {
         cout << "Ходы: " << moves << endl;
 
         // Получаем ввод пользователя
-        cout << "Введите координаты (строка столбец) через пробел: ";
+        cout << "Введите координаты (строка столбец): ";
         string input;
         getline(cin, input);
 
         stringstream ss(input);
         int r, c;
         if (!(ss >> r >> c)) {
-            cout << "Ошибка: введите два числа через пробел " << endl;
+            cout << "Ошибка: введите два числа через пробел (например: 5 10)" << endl;
             continue;
         }
 
@@ -107,15 +104,13 @@ int main() {
             continue;
         }
 
-        if (opened[r][c])
-        {
+        if (opened[r][c]) {
             cout << "Эта клетка уже открыта!" << endl;
             continue;
         }
 
         // Первый ход - размещаем мины после него, избегая первой клетки
-        if (moves == 0)
-        {
+        if (moves == 0) {
             first_row = r;
             first_col = c;
             place_mines(field, rows, cols, mines_count, first_row, first_col);
@@ -125,14 +120,11 @@ int main() {
         bool hit = open(field, opened, rows, cols, r, c);
         moves++;
 
-        if (hit)
-        {
+        if (hit) {
             // Открываем все мины при проигрыше
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j < cols; j++)
-                {
-                    if (field[i][j] == '*') { opened[i][j] = true; }
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    if (field[i][j] == '*') opened[i][j] = true;
                 }
             }
             print_field1(field, opened, rows, cols, moves);
@@ -142,8 +134,7 @@ int main() {
     }
 
     // Освобождение памяти
-    for (int i = 0; i < rows; i++)
-    {
+    for (int i = 0; i < rows; i++) {
         delete[] field[i];
         delete[] opened[i];
     }
@@ -199,14 +190,13 @@ void calculate_numbers(char** field, int rows, int cols) {
                     count++;
                 }
             }
-            field[i][j] = '-';
-
+            field[i][j] = (count == 0) ? '.' : ('0' + count);//проверяет, равно ли количество соседних мин 0, если да, то присваивается '.'-клетка пустая без мин пососедству, иначе присваивается символ 'число' соответствующий количеству мин
+            //field[i][j] =  '0' + count;//без множественного открытия
         }
     }
 }
 
 void print_field1(char** _field, bool** _opened, int rows, int cols, int moves) {
-
     Sleep(2000);
     system("cls");
 
@@ -251,6 +241,7 @@ void print_field1(char** _field, bool** _opened, int rows, int cols, int moves) 
     cout << "+\n";
 }
 
+// Остальные функции остаются без изменений
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename) {
     FILE* file = fopen(_filename, "w");
     if (!file) {
