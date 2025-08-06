@@ -49,8 +49,8 @@ void calculate_numbers(char** field, int rows, int cols);
 
 int main() {
     srand(time(NULL));
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 
     // Выбор уровня сложности
     cout << "Выберите уровень сложности:" << endl;
