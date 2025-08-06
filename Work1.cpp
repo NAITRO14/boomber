@@ -88,14 +88,14 @@ int main() {
         string input;
         getline(cin, input);
 
-        stringstream ss(input);
+        stringstream ss(input); // положили в ss input
         int r, c;
         if (!(ss >> r >> c)) {
             cout << "Ошибка: введите два числа через пробел (например: 5 10)" << endl;
             continue;
         }
 
-        // Преобразуем в индексы массива (1-based -> 0-based)
+        // отнимаем 1 для работы
         r--; c--;
 
         // Проверяем границы
@@ -106,6 +106,7 @@ int main() {
 
         if (opened[r][c]) {
             cout << "Эта клетка уже открыта!" << endl;
+            Sleep(2000);
             continue;
         }
 
@@ -141,7 +142,6 @@ int main() {
     delete[] field;
     delete[] opened;
 
-    return 0;
 }
 
 void initialize_field(char** field, bool** opened, int rows, int cols) {
