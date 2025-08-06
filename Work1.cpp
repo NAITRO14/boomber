@@ -91,14 +91,14 @@ int main() {
         string input;
         getline(cin, input);
 
-        stringstream ss(input);
+        stringstream ss(input); // положили в ss input
         int r, c;
-        if (!(ss >> r >> c)) {
+        if (!(ss >> r >> c)) {//считывание с ss 2х числеи и их запись в r и c
             cout << "Ошибка: введите два числа через пробел " << endl;
             continue;
         }
 
-        // Преобразуем в индексы массива (1-based -> 0-based)
+        // отнимаем 1 для работы
         r--; c--;
 
         // Проверяем границы
@@ -107,9 +107,10 @@ int main() {
             continue;
         }
 
-        if (opened[r][c])
+        if (opened[r][c]) // потому что думает что можно выйти за пределы массива ?
         {
             cout << "Эта клетка уже открыта!" << endl;
+            Sleep(2000);
             continue;
         }
 
@@ -150,7 +151,6 @@ int main() {
     delete[] field;
     delete[] opened;
 
-    return 0;
 }
 
 void initialize_field(char** field, bool** opened, int rows, int cols) {
@@ -199,7 +199,8 @@ void calculate_numbers(char** field, int rows, int cols) {
                     count++;
                 }
             }
-            field[i][j] = '-';
+            field[i][j] = '0' + count;
+            
 
         }
     }
@@ -207,7 +208,6 @@ void calculate_numbers(char** field, int rows, int cols) {
 
 void print_field1(char** _field, bool** _opened, int rows, int cols, int moves) {
 
-    Sleep(2000);
     system("cls");
 
     // Вывод номеров столбцов (двузначные числа)
