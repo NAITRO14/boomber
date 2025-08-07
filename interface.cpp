@@ -8,14 +8,52 @@
 
 //графика
 #include <FL/Fl.H>
-#include <FL/Fl_Window.H>
+#include <FL/Fl_Double_Window.H> // использование двойной буферизации
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
 using namespace std;
 
+
+class TogButton : public Fl_Button 
+{
+int Y = y(); //чтобы вернуть кнопку на место
+public:
+	TogButton(int X, int Y, int W, int H, const char* L = 0)
+		:Fl_Button(X, Y, W, H, L)
+	{
+		color(fl_rgb_color(169, 169, 169));
+		selection_color(fl_rgb_color(143, 175, 255));
+		clear_visible_focus();
+	}
+	
+	int handle(int event) override 
+	{
+		switch (event)
+		{
+		case FL_ENTER:
+		{
+			position(x(), Y - 5);
+			redraw();
+			if (parent()) { parent()->parent()->redraw(); }
+			return 1;
+		}
+		case FL_LEAVE:
+		{
+			position(x(), Y);
+			redraw();
+			if (parent()) { parent()->parent()->redraw(); }
+			return 1;
+		}
+		}
+		
+		return Fl_Button::handle(event);
+	}
+};
+
 //создать свой класс, со своими параметрами кнопи
-class MyButton : public Fl_Button {
+class MyButton : public Fl_Button 
+{
 public:
 	//параметры кнопки
 	MyButton(int X, int Y, int W, int H, const char* L = 0)
@@ -23,11 +61,12 @@ public:
 	{
 		color(fl_rgb_color(169, 169, 169));
 		selection_color(fl_rgb_color(100, 100, 105));
-
+		clear_visible_focus();
 	}
-	
+
 	//обработка событий наведения
-	int handle(int event) override {
+	int handle(int event) override 
+	{
 		switch (event)
 		{
 		case FL_ENTER:
@@ -41,12 +80,13 @@ public:
 			color(fl_rgb_color(169, 169, 169));
 			redraw();
 			return 1;
+			return 1;
 		}
 		}
 
 		return Fl_Button::handle(event);
 	}
-
+	//сброс состояния при переходе в другие меню
 	void reset_state() {
 		color(fl_rgb_color(169, 169, 169));
 		redraw();
@@ -90,7 +130,8 @@ int main(int argc, char** argv)
 {
 	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
-	Fl_Window win(1000, 600, "игра");
+	Fl_Double_Window win(1000, 600, "игра");
+
 	win.color(fl_rgb_color(192, 192, 192));
 
 	//группа приветственного меню (0)
@@ -112,9 +153,9 @@ int main(int argc, char** argv)
 	//Группа настройки игры(2)
 	Fl_Group* game_settings = new Fl_Group(0, 0, 1000, 600);
 
-	MyButton easy(175, 150, 150, 70, "Легко");
-	MyButton normal(425, 150, 150, 70, "Нормально");
-	MyButton hard(675, 150, 150, 70, "Сложно");
+	TogButton easy(175, 150, 150, 70, "Легко");
+	TogButton normal(425, 150, 150, 70, "Нормально");
+	TogButton hard(675, 150, 150, 70, "Сложно");
 
 	MyButton back(9, 531, 125, 60, "В меню");
 
@@ -133,7 +174,7 @@ int main(int argc, char** argv)
 
 void toGameMenu(Fl_Widget* w, void* data)
 {
-	Fl_Window* win = (Fl_Window*)data;
+	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(1);
 	MyButton* but = NULL;
 	if (win->child(0)->visible())
@@ -168,7 +209,7 @@ void exitf(Fl_Widget* w, void* data)
 
 void toGameSettings(Fl_Widget* w, void* data)
 {
-	Fl_Window* win = (Fl_Window*)data;
+	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
 	MyButton* but = NULL;
 
@@ -183,7 +224,7 @@ void toGameSettings(Fl_Widget* w, void* data)
 
 void choose_level(Fl_Widget* w, void* data)
 {
-	Fl_Window* win = (Fl_Window*)data;
+	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
 
 	game_level = 0;

@@ -219,7 +219,7 @@ void print_field1(char** _field, bool** _opened, int rows, int cols, int moves) 
                 if (_field[i][j] == '*') {
                     cout << " * ";
                 }
-                else if (_field[i][j] == '.') {
+                else if (_field[i][j] == '0') {
                     cout << " . ";
                 }
                 else {
@@ -287,7 +287,7 @@ void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int
     if (_opened[_row][_col]) return;
 
     _opened[_row][_col] = true;
-    if (_field[_row][_col] != '.') return;
+    if (_field[_row][_col] != '0') return;
 
     int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
     int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
@@ -302,7 +302,7 @@ bool open(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
         _opened[_row][_col] = true;
         return true; // мина
     }
-    else if (_field[_row][_col] == '.') {
+    else if (_field[_row][_col] == '0') {
         open_empty(_field, _opened, rows, cols, _row, _col);
     }
     else {
