@@ -49,11 +49,19 @@ public:
 		
 		return Fl_Button::handle(event);
 	}
+
+	void reset_state() {
+		color(fl_rgb_color(169, 169, 169));
+		redraw();
+		if (parent()) { parent()->parent()->redraw(); }
+	}
 };
 
 //создать свой класс, со своими параметрами кнопи
 class MyButton : public Fl_Button 
 {
+	int Wold = w(), Hold = h(), Xold = x(), Yold = y();
+	int Wnew, Hnew, Xnew, Ynew;
 public:
 	//параметры кнопки
 	MyButton(int X, int Y, int W, int H, const char* L = 0)
@@ -71,15 +79,21 @@ public:
 		{
 		case FL_ENTER:
 		{
+			Wnew = Wold * 1.1; Hnew = Hold * 1.1;
+			Xnew = Xold - (Wnew - Wold) / 2; Ynew = Yold - (Hnew - Hold) / 2;
+
 			color(fl_rgb_color(100, 100, 105));
+			resize(Xnew, Ynew, Wnew, Hnew);
 			redraw();
+			if (parent()) { parent()->parent()->redraw(); }
 			return 1;
 		}
 		case FL_LEAVE:
 		{
+			resize(Xold, Yold, Wold, Hold);
 			color(fl_rgb_color(169, 169, 169));
 			redraw();
-			return 1;
+			if (parent()) { parent()->parent()->redraw(); }
 			return 1;
 		}
 		}
@@ -88,8 +102,10 @@ public:
 	}
 	//сброс состояния при переходе в другие меню
 	void reset_state() {
+		resize(Xold, Yold, Wold, Hold);
 		color(fl_rgb_color(169, 169, 169));
 		redraw();
+		if (parent()) { parent()->parent()->redraw(); }
 	}
 
 };
@@ -198,8 +214,6 @@ void toGameMenu(Fl_Widget* w, void* data)
 			but->reset_state();
 		}
 	}
-
-
 }
 
 void exitf(Fl_Widget* w, void* data)
@@ -211,13 +225,25 @@ void toGameSettings(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
-	MyButton* but = NULL;
+	MyButton* Mybut = NULL; TogButton* TogBut = NULL;
 
 	for (short i = 0; i < group->children(); i++)
 	{
-		but = (MyButton*)group->child(i);
-		but->reset_state();
+		if (i == 3) 
+		{ 
+			Mybut = (MyButton*)group->child(i);
+			Mybut->reset_state();
+		}
+		else
+		{
+			TogBut = (TogButton*)group->child(i);
+			TogBut->reset_state();
+		}
+		
 	}
+	
+	
+
 	win->child(1)->hide();
 	win->child(2)->show();
 }
