@@ -1,4 +1,5 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+//функцонал
 #include <iostream>
 #include <windows.h>
 #include <iomanip>
@@ -12,6 +13,10 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
+
+//звуки
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 using namespace std;
 
 
@@ -33,6 +38,10 @@ public:
 		{
 		case FL_ENTER:
 		{
+			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
 			position(x(), Y - 5);
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
@@ -82,6 +91,10 @@ public:
 			Wnew = Wold * 1.1; Hnew = Hold * 1.1;
 			Xnew = Xold - (Wnew - Wold) / 2; Ynew = Yold - (Hnew - Hold) / 2;
 
+			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
 			color(fl_rgb_color(100, 100, 105));
 			resize(Xnew, Ynew, Wnew, Hnew);
 			redraw();
@@ -144,7 +157,7 @@ void choose_level(Fl_Widget* w, void* data);
 
 int main(int argc, char** argv)
 {
-	HideConsole();
+	ShowConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
 	Fl_Double_Window win(1000, 600, "игра");
 
