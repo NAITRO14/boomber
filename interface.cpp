@@ -65,6 +65,7 @@ public:
 			return 1;
 		}
 		}
+
 		
 		return Fl_Button::handle(event);
 	}
@@ -81,6 +82,9 @@ class MyButton : public Fl_Button
 {
 	int Wold = w(), Hold = h(), Xold = x(), Yold = y();
 	int Wnew = 0, Hnew = 0, Xnew = 0, Ynew = 0;
+	bool inFocus = NULL;
+
+	int fW = w() + 20, fH = h() + 10;
 public:
 	//параметры кнопки
 	MyButton(int X, int Y, int W, int H, const char* L = 0)
@@ -107,29 +111,27 @@ public:
 		}
 		case FL_ENTER:
 		{
-			Wnew = Wold * 1.1; Hnew = Hold * 1.1;
-			Xnew = Xold - (Wnew - Wold) / 2; Ynew = Yold - (Hnew - Hold) / 2;
-
 			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
 			{
 				cout << "Звук не найден" << endl;
 			}
+			inFocus = true;
 			color(fl_rgb_color(100, 100, 105));
-			resize(Xnew, Ynew, Wnew, Hnew);
+			startAnimation(true);
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
 			return 1;
 		}
 		case FL_LEAVE:
 		{
-			resize(Xold, Yold, Wold, Hold);
+			inFocus = false;
+			startAnimation(false);
 			color(fl_rgb_color(169, 169, 169));
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
 			return 1;
 		}
 		}
-
 		return Fl_Button::handle(event);
 	}
 	//сброс состояния при переходе в другие меню
@@ -139,7 +141,93 @@ public:
 		redraw();
 		if (parent()) { parent()->parent()->redraw(); }
 	}
+private:
 
+	struct animationVal
+	{//переменные для анимации
+		MyButton* but;
+		int final_w, final_h;
+		int cur_w, cur_h;
+		int orig_x, orig_y;
+		int curX, curY;
+		int orig_W, orig_H;
+		bool action; // увеличчивать или уменьшать
+
+		//кнструктор для анимации
+		animationVal(MyButton* b, int fw, int fh, int cw, int ch, int ox, int oy, int cx, int cy, int ow, int oh, bool act)
+			:but(b), final_w(fw), final_h(fh), cur_w(cw), cur_h(ch), orig_x(ox), orig_y(oy), curX(cx), curY(cy),orig_W(ow), orig_H(oh), action(act){}
+	};
+	void startAnimation(bool ent)
+	{
+
+		animationVal* anim = new animationVal(this, fW, fH, w(), h(), Xold, Yold, x(), y(), Wold, Hold, ent);
+		Fl::add_timeout(0.02, animation, anim);
+	}
+
+	//статическая, чтобы не было this
+	static void animation(void*data)
+	{
+		animationVal* anim = (animationVal*)data;
+		MyButton* but = anim->but;
+		if (!anim or !anim->but) return;//проверка чтобы нопка была
+		
+
+		if (anim->action == true)
+		{
+			if (anim->final_w > anim->cur_w and anim->final_h > anim->cur_h)
+			{
+				anim->cur_w += 2;
+				anim->cur_h += 1;
+				anim->curX = anim->orig_x - (anim->cur_w - anim->orig_W) / 2;
+				anim->curY = anim->orig_y - (anim->cur_h - anim->orig_H) / 2;
+
+				but->resize(anim->curX, anim->curY, anim->cur_w, anim->cur_h);
+				but->redraw();
+				but->parent()->parent()->redraw();
+
+				if (but->inFocus)
+				{
+					if (!(anim->final_w == anim->cur_w and anim->final_h == anim->cur_h))
+					{
+						Fl::add_timeout(0.02, animation, anim);
+					}
+					else
+					{//если закончили - освободить память
+						delete anim;
+					}
+				}
+				else
+				{
+					return;
+				}
+			}
+		}
+		else
+		{
+			if (anim->orig_W < anim->cur_w and anim->orig_H < anim->cur_h)
+			{
+				anim->cur_w -= 2;
+				anim->cur_h -= 1;
+
+				anim->curX = anim->orig_x + (anim->orig_W - anim->cur_w) / 2;
+				anim->curY = anim->orig_y + (anim->orig_H - anim->cur_h) / 2;
+
+				but->resize(anim->curX, anim->curY, anim->cur_w, anim->cur_h);
+				but->redraw();
+				but->parent()->parent()->redraw();
+				bool done = anim->final_w == anim->cur_w and anim->final_h == anim->cur_h;
+				if (!done)
+				{
+					Fl::add_timeout(0.02, animation, anim);
+				}
+				else
+				{//если закончили - освободить память
+					delete anim;
+				}
+			}
+		}
+
+	}
 };
 
 //структуры определения игры
@@ -152,9 +240,9 @@ struct GameLevel {
 	string name;
 };
 GameLevel levels[] = {
-	{10, 10, 10, 50, 3, "легкий"},
-	{15, 15, 23, 75, 2, "средний"},
-	{20, 25, 50, 100, 1, "сложный"}
+	{10, 10, 10, 50, 3, "Kегкий"},
+	{15, 15, 23, 75, 2, "Cредний"},
+	{20, 25, 50, 100, 1, "Cложный"}
 };
 
 //глобальные переменные для игры
@@ -176,7 +264,7 @@ void choose_level(Fl_Widget* w, void* data);
 
 int main(int argc, char** argv)
 {
-	//настройка звука рпиложения
+	//настройка звука приложения
 	/*WORD vl = (WORD)(0xFFFF);
 	DWORD volume = MAKELONG(vl, vl);
 	waveOutSetVolume(NULL, volume);*/
