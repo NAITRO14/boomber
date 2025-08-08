@@ -30,14 +30,24 @@ public:
 		color(fl_rgb_color(169, 169, 169));
 		selection_color(fl_rgb_color(143, 175, 255));
 		clear_visible_focus();
+		labelsize(24);
 	}
 	
 	int handle(int event) override 
 	{
 		switch (event)
 		{
+		case FL_PUSH:
+		{
+			if (!PlaySound(TEXT("sounds/selection.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+			return Fl_Button::handle(event);
+		}
 		case FL_ENTER:
 		{
+			
 			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
 			{
 				cout << "Звук не найден" << endl;
@@ -70,7 +80,7 @@ public:
 class MyButton : public Fl_Button 
 {
 	int Wold = w(), Hold = h(), Xold = x(), Yold = y();
-	int Wnew, Hnew, Xnew, Ynew;
+	int Wnew = 0, Hnew = 0, Xnew = 0, Ynew = 0;
 public:
 	//параметры кнопки
 	MyButton(int X, int Y, int W, int H, const char* L = 0)
@@ -79,6 +89,7 @@ public:
 		color(fl_rgb_color(169, 169, 169));
 		selection_color(fl_rgb_color(100, 100, 105));
 		clear_visible_focus();
+		labelsize(20);
 	}
 
 	//обработка событий наведения
@@ -86,6 +97,14 @@ public:
 	{
 		switch (event)
 		{
+		case FL_PUSH:
+		{
+			if (!PlaySound(TEXT("sounds/on_click.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+			return Fl_Button::handle(event);
+		}
 		case FL_ENTER:
 		{
 			Wnew = Wold * 1.1; Hnew = Hold * 1.1;
@@ -157,9 +176,14 @@ void choose_level(Fl_Widget* w, void* data);
 
 int main(int argc, char** argv)
 {
-	ShowConsole();
+	//настройка звука рпиложения
+	/*WORD vl = (WORD)(0xFFFF);
+	DWORD volume = MAKELONG(vl, vl);
+	waveOutSetVolume(NULL, volume);*/
+
+	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
-	Fl_Double_Window win(1000, 600, "игра");
+	Fl_Double_Window win(1000, 600, "Boomber");
 
 	win.color(fl_rgb_color(192, 192, 192));
 
@@ -186,7 +210,7 @@ int main(int argc, char** argv)
 	TogButton normal(425, 150, 150, 70, "Нормально");
 	TogButton hard(675, 150, 150, 70, "Сложно");
 
-	MyButton back(9, 531, 125, 60, "В меню");
+	MyButton back(9, 531, 125, 60, "Назад");
 
 	back.callback(toGameMenu, &win);
 	easy.callback(choose_level, &win);
