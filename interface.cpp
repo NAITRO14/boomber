@@ -19,11 +19,14 @@
 #pragma comment(lib, "winmm.lib")
 using namespace std;
 
+void ShowSign(void* data);
 
 class TogButton : public Fl_Button 
 {
 int Y = y(); //чтобы вернуть кнопку на место
 public:
+	bool inFocus = false;
+
 	TogButton(int X, int Y, int W, int H, const char* L = 0)
 		:Fl_Button(X, Y, W, H, L)
 	{
@@ -47,11 +50,12 @@ public:
 		}
 		case FL_ENTER:
 		{
-			
 			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
 			{
 				cout << "Звук не найден" << endl;
 			}
+			inFocus = true;
+			ShowSign(this);
 			position(x(), Y - 5);
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
@@ -59,6 +63,8 @@ public:
 		}
 		case FL_LEAVE:
 		{
+			inFocus = false;
+			ShowSign(this);
 			position(x(), Y);
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
@@ -76,8 +82,6 @@ public:
 		if (parent()) { parent()->parent()->redraw(); }
 	}
 };
-//3 кнопки в мню выбора сложности
-void ShowSign(void* data);
 
 //обычная кнопка 
 class MyButton : public Fl_Button 
@@ -341,8 +345,12 @@ int main(int argc, char** argv)
 	TogButton easy(175, 150, 150, 70, "Легко");
 	TogButton normal(425, 150, 150, 70, "Нормально");
 	TogButton hard(675, 150, 150, 70, "Сложно");
-
 	MyButton back(15, 525, 125, 60, "Назад");
+
+	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
+	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
+	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
+
 
 	back.callback(toGameMenu, &win);
 	easy.callback(choose_level, &win);
@@ -396,7 +404,7 @@ void toGameSettings(Fl_Widget* w, void* data)
 	Fl_Group* group = (Fl_Group*)win->child(2);
 	MyButton* Mybut = NULL; TogButton* TogBut = NULL;
 
-	for (short i = 0; i < group->children(); i++)
+	for (short i = 0; i < 4; i++)
 	{
 		if (i == 3) 
 		{ 
@@ -523,6 +531,75 @@ void ShowSign(void* data)
 			Fl::add_timeout(0.005, ShowSign, data);
 		}
 	}
+	//легко
+	else if (strcmp(but->label(), "Легко") == 0)
+	{
+		Fl_Widget* box = but->parent()->child(4);
+		TogButton* tBut = (TogButton*)data;
+
+		if (tBut->inFocus and box->y() < 0)
+		{
+			box->resize(box->x(), box->y() + 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+		else if (!tBut->inFocus and box->y() > -56)
+		{
+			box->resize(box->x(), box->y() - 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+	}
+	//нормально
+	else if (strcmp(but->label(), "Нормально") == 0)
+	{
+		Fl_Widget* box = but->parent()->child(5);
+		TogButton* tBut = (TogButton*)data;
+
+		if (tBut->inFocus and box->y() < 0)
+		{
+			box->resize(box->x(), box->y() + 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+		else if (!tBut->inFocus and box->y() > -56)
+		{
+			box->resize(box->x(), box->y() - 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+	}
+	//сложно
+	else if (strcmp(but->label(), "Сложно") == 0)
+	{
+		Fl_Widget* box = but->parent()->child(6);
+		TogButton* tBut = (TogButton*)data;
+
+		if (tBut->inFocus and box->y() < 0)
+		{
+			box->resize(box->x(), box->y() + 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+		else if (!tBut->inFocus and box->y() > -56)
+		{
+			box->resize(box->x(), box->y() - 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+		}
 }
 
 
