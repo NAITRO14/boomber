@@ -190,14 +190,12 @@ void calculate_numbers(char** field, int rows, int cols) {
                     count++;
                 }
             }
-            field[i][j] = (count == 0) ? '.' : ('0' + count);//проверяет, равно ли количество соседних мин 0, если да, то присваивается '.'-клетка пустая без мин пососедству, иначе присваивается символ 'число' соответствующий количеству мин
-            //field[i][j] =  '0' + count;//без множественного открытия
+            field[i][j] = '0' + count;
         }
     }
 }
 
 void print_field1(char** _field, bool** _opened, int rows, int cols, int moves) {
-    Sleep(2000);
     system("cls");
 
     // Вывод номеров столбцов (двузначные числа)
