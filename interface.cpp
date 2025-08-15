@@ -285,7 +285,7 @@ const GameLevel levels[] =
 
 //глобальные переменные для игры
  
-int game_level = NULL;
+int game_level = 0;
 
 //графика
 void ShowConsole() {
