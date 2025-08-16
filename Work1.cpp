@@ -55,7 +55,15 @@ int main() {
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 
+    //обявление переменных для игры
     char res = 0;
+    int rows;
+    int cols;
+    int mines_count;
+    int moves;
+    bool game_over;
+    int first_row, first_col;
+    bool normal_exit;
 
     do {
         // Выбор уровня сложности
@@ -71,24 +79,27 @@ int main() {
             cin >> choice;
             cin.ignore(); // Очищаем буфер ввода
         } while (choice < 1 || choice > LEVELS_COUNT);
+
+        //инициализация переменных
         const GameLevel& level = levels[choice - 1];
-        int rows = level.rows;
-        int cols = level.cols;
-        int mines_count = level.mines_count;
-        // Динамическое создание массивов
+        rows = level.rows;
+        cols = level.cols;
+        mines_count = level.mines_count;
+        moves = 0;
+        game_over = false;
+        first_row = -1, first_col = -1;
+        normal_exit = false;//нормальное завершение (не досрочное)
+
         char** field = new char* [rows];
         bool** opened = new bool* [rows];
         initialize_field(field, opened, rows, cols);
-        int moves = 0;
-        bool game_over = false;
-        int first_row = -1, first_col = -1;
-        bool normal_exit = false; //  нормальное завершение (не досрочное)
-        auto start_time = steady_clock::now();// запускаем таймер (steady_clock::now возвращает текущий момент времени, монотонно считает время)
+         
+        auto start_time = steady_clock::now();// запускаем таймер
         while (!game_over) {
             // Вычисляем прошедшее время
             auto current_time = steady_clock::now();//текущий момент времени
-            auto elapsed_time = duration_cast<seconds>(current_time - start_time);//(current_time - start_time)-вычисляем разницу между стартом и окончанием, duration_cast<seconds> -преобразует длительность в секунды,(current_time - start_time)
-            int seconds_played = elapsed_time.count();//.count() - получаем числовое значение секунд
+            auto elapsed_time = duration_cast<seconds>(current_time - start_time);
+            int seconds_played = elapsed_time.count();
 
             print_field1(field, opened, rows, cols, moves, start_time);//добавил параметр и cout время
             cout << "Уровень: " << level.name << endl;
@@ -126,7 +137,7 @@ int main() {
                 Sleep(2000);
                 continue;
             }
-            // Первый ход - размещаем мины после него, избегая первой клетки
+            // Первый ход - безопасный
             if (moves == 0) {
                 first_row = r;
                 first_col = c;
@@ -137,15 +148,15 @@ int main() {
             moves++;
 
             if (hit) {
-                // Открываем все мины при проигрыше
+                // Открываем все клетки при проигрыше
                 for (int i = 0; i < rows; i++) {
                     for (int j = 0; j < cols; j++) {
                         if (field[i][j] == '*') opened[i][j] = true;
                     }
                 }
                 // Вычисляем итоговое время если проиграли
-                auto end_time = steady_clock::now();//конечный момент времени
-                auto total_time = duration_cast<seconds>(end_time - start_time);//( end_time - start_time)-вычисляем разницу между стартом и окончанием, duration_cast<seconds> -преобразует длительность в секунды,(current_time - start_time)
+                auto end_time = steady_clock::now();
+                auto total_time = duration_cast<seconds>(end_time - start_time);
 
                 print_field1(field, opened, rows, cols, moves, start_time);
                 lose_screen(moves, total_time.count());
@@ -206,7 +217,7 @@ void place_mines(char** _field, int rows, int cols, int mines_count, int first_r
         int x = rand() % rows;
         int y = rand() % cols;
 
-        // Не ставим мину в первую клетку и в соседние клетки
+        // Не ставим мину в первую и в соседние клетки
         if ((x == first_row && y == first_col) || (abs(x - first_row) <= 1 && abs(y - first_col) <= 1))
         {
             continue;
@@ -221,7 +232,6 @@ void place_mines(char** _field, int rows, int cols, int mines_count, int first_r
     save_field_to_file(_field, rows, cols, "MINES.txt");
 }
 
-// добавил в функцию  отображение времени
 void print_field1(char** _field, bool** _opened, int rows, int cols, int moves, steady_clock::time_point start_time) {
     system("cls");
 
