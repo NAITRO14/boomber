@@ -232,31 +232,39 @@ void print_field1(char** _field, bool** _opened, int rows, int cols, int moves, 
 
     // Вывод номеров столбцов (двузначные числа)
     cout << "    ";
-    for (int j = 1; j <= cols; j++) {
+    for (int j = 1; j <= cols; j++)
+    {
         cout << setw(2) << j << " ";
     }
     cout << "\n   +";
-    for (int i = 0; i < cols * 3 - 1; i++) {
+    for (int i = 0; i < cols * 3 - 1; i++)
+    {
         cout << "-";
     }
     cout << "+\n";
 
     // Вывод строк поля
-    for (int i = 0; i < rows; i++) {
+    for (int i = 0; i < rows; i++) 
+    {
         cout << setw(2) << i + 1 << " |"; // Номер строки
-        for (int j = 0; j < cols; j++) {
-            if (_opened[i][j]) {
-                if (_field[i][j] == '*') {
+        for (int j = 0; j < cols; j++) 
+        {
+            if (_opened[i][j])
+            {
+                if (_field[i][j] == '*')
+                {
                     cout << " * ";
                 }
                 else if (_field[i][j] == '0') {
                     cout << " . ";
                 }
-                else {
+                else
+                {
                     cout << " " << _field[i][j] << " ";
                 }
             }
-            else {
+            else
+            {
                 cout << " 0 ";
             }
         }
