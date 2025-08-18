@@ -444,7 +444,7 @@ int main(int argc, char** argv)
 	TogButton easy(175, 150, 150, 70, "Легко");
 	TogButton normal(425, 150, 150, 70, "Нормально");
 	TogButton hard(675, 150, 150, 70, "Сложно");
-	MyButton back(15, 525, 125, 60, "Назад");
+	menuBut back(15, 525, 125, 60, "Назад");
 
 	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
@@ -470,14 +470,14 @@ void toGameMenu(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(1);
-	MyButton* but = NULL;
+	menuBut* but = NULL;
 	if (win->child(0)->visible())
 	{
 		win->child(0)->hide();
 		win->child(1)->show();
 		for (short i = 0; i < 3; i++)
 		{
-			but = (MyButton*)group->child(i);
+			but = (menuBut*)group->child(i);
 			but->reset_state();
 		}
 	}
@@ -488,7 +488,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 		choose_level(w, data);
 		for (short i = 0; i < 3; i++)
 		{
-			but = (MyButton*)group->child(i);
+			but = (menuBut*)group->child(i);
 			but->reset_state();
 		}
 	}
@@ -503,13 +503,13 @@ void toGameSettings(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
-	MyButton* Mybut = NULL; TogButton* TogBut = NULL;
+	menuBut* Mybut = NULL; TogButton* TogBut = NULL;
 
 	for (short i = 0; i < 4; i++)
 	{
 		if (i == 3) 
 		{ 
-			Mybut = (MyButton*)group->child(i);
+			Mybut = (menuBut*)group->child(i);
 			Mybut->reset_state();
 		}
 		else
@@ -568,7 +568,7 @@ void choose_level(Fl_Widget* w, void* data)
 
 void ShowSign(void* data)
 {
-	MyButton* but = (MyButton*)data;
+	menuBut* but = (menuBut*)data;
 	//начать игру
 	if (strcmp(but->label(), "Начать игру") == 0)
 	{
