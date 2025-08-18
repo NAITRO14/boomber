@@ -109,20 +109,12 @@ public:
 		{
 		case FL_PUSH:
 		{
-			if (!PlaySound(TEXT("sounds/on_click.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
-			}
 			inFocus = false;
 			rsOfBlock();
 			return Fl_Button::handle(event);
 		}
 		case FL_ENTER:
 		{
-			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
-			}
 			inFocus = true;
 			color(fl_rgb_color(100, 100, 105));
 			startAnimation(true);
@@ -245,6 +237,36 @@ private:
 	}
 };
 
+class menuBut : public MyButton
+{
+	
+public:
+	menuBut(int X, int Y, int W, int H, const char* L = 0)
+		: MyButton(X, Y, W, H, L){}
+
+	int handle(int event)
+	{
+		switch (event)
+		{
+		case FL_PUSH:
+		{
+			if (!PlaySound(TEXT("sounds/on_click.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+		}break;
+		case FL_ENTER:
+		{
+			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+		}break;
+		}
+		return MyButton::handle(event);
+	}
+};
+
 //выезжающие тексты
 class BoxForBut : Fl_Box
 {
@@ -259,7 +281,7 @@ public:
 };
 
 //дочерний класс для кнопки "играть"
-class  PlayBut : MyButton 
+class  PlayBut : public MyButton 
 {
 	float Progress = 0.0f;
 	bool anim = false;
@@ -395,16 +417,16 @@ int main(int argc, char** argv)
 
 	//группа приветственного меню (0)
 	Fl_Group* helloWin = new Fl_Group(0, 0, 1000, 600);
-	MyButton begin(435.5, 250, 125, 60, "Начать");
+	menuBut begin(435.5, 250, 125, 60, "Начать");
 	begin.callback(toGameMenu, helloWin->parent());
 	helloWin->end();
 
 	//группа игрового меню (1)
 	Fl_Group* mainMenu = new Fl_Group(0, 0, 1000, 600);
 
-	MyButton start(100, 150, 150, 75, "Начать игру");
-	MyButton rules(100, 250, 150, 75, "Правила");
-	MyButton exit(100, 350, 150, 75, "Выход");
+	menuBut start(100, 150, 150, 75, "Начать игру");
+	menuBut rules(100, 250, 150, 75, "Правила");
+	menuBut exit(100, 350, 150, 75, "Выход");
 
 	BoxForBut Tstart(300, -32, 291, 32, "Перейти к настройке сложности");
 	BoxForBut Trules(1000, 272, 291, 32, "Ознакомиться с правилами игры");
