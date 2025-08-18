@@ -109,26 +109,16 @@ public:
 		{
 		case FL_PUSH:
 		{
-			if (!PlaySound(TEXT("sounds/on_click.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
-			}
 			inFocus = false;
 			rsOfBlock();
 			return Fl_Button::handle(event);
 		}
 		case FL_ENTER:
 		{
-			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
-			}
 			inFocus = true;
 			color(fl_rgb_color(100, 100, 105));
 			startAnimation(true);
 			ShowSign(this);
-			/*ShowSignData* data = new ShowSignData{ this, this->inFocus };
-			Fl::add_timeout(0.02, ShowSign, data);*/
 			return 1;
 		}
 		case FL_LEAVE:
@@ -137,8 +127,6 @@ public:
 			color(fl_rgb_color(169, 169, 169));
 			startAnimation(false);
 			ShowSign(this);
-			/*ShowSignData* data = new ShowSignData{ this, this->inFocus };
-			Fl::add_timeout(0.02, ShowSign, data);*/
 			return 1;
 		}
 		}
@@ -161,11 +149,6 @@ public:
 		}
 	}
 private:
-	struct ShowSignData
-	{
-		MyButton* but;
-		bool inFocus;
-	};
 
 	struct animationVal
 	{//переменные для анимации
@@ -254,6 +237,135 @@ private:
 	}
 };
 
+class menuBut : public MyButton
+{
+	
+public:
+	menuBut(int X, int Y, int W, int H, const char* L = 0)
+		: MyButton(X, Y, W, H, L){}
+
+	int handle(int event)
+	{
+		switch (event)
+		{
+		case FL_PUSH:
+		{
+			if (!PlaySound(TEXT("sounds/on_click.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+		}break;
+		case FL_ENTER:
+		{
+			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+		}break;
+		}
+		return MyButton::handle(event);
+	}
+};
+
+//выезжающие тексты
+class BoxForBut : Fl_Box
+{
+public:
+	BoxForBut(int X, int Y, int W, int H, const char* L = 0)
+		:Fl_Box(X, Y, W, H, L)
+	{
+		color(fl_rgb_color(169, 169, 169));
+		box(FL_FLAT_BOX);
+		labelsize(18);
+	}
+};
+
+//дочерний класс для кнопки "играть"
+class  PlayBut : public MyButton 
+{
+	float Progress = 0.0f;
+	bool anim = false;
+	bool icreasing = false;
+
+	Fl_Color startColor = fl_rgb_color(169, 169, 169);
+	Fl_Color endColor = fl_rgb_color(237, 55, 55);
+public:
+	PlayBut(int X, int Y, int W, int H, const char* L = 0)
+		: MyButton(X, Y, W, H, L) {}
+
+	int handle(int event)
+	{
+		switch (event)
+		{
+		case FL_ENTER:
+		{
+			startAnim(true);
+			if (!PlaySound(TEXT("sounds/pbip.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+
+		}break;
+		case FL_LEAVE:
+		{
+			startAnim(false);
+		}
+
+		}
+		return MyButton::handle(event);
+	}
+
+	void startAnim(bool inc)
+	{
+		icreasing = inc;
+		anim = true;
+		Progress = icreasing ? 0.0f : 1.0f; //тернарный оператор(if/else)
+
+		Fl::add_timeout(0.02, animation, this);
+	}
+
+	static void animation(void* data)
+	{
+		PlayBut* but = (PlayBut*)data;
+
+		if (but->anim)
+		{
+			if (but->icreasing)
+			{
+				if (but->Progress < 1.0f)
+				{
+					but->Progress += 0.05f;
+				}
+				else { but->anim = false; }
+			}
+			else
+			{
+				if (but->Progress > 0.0f)
+				{
+					but->Progress -= 0.05f;
+				}
+				else { but->anim = false; }
+			}
+		}
+		but->newColor();
+		but->redraw();
+		if (but->anim)
+		{
+			Fl::repeat_timeout(0.02, animation, but);
+		}
+
+	}
+
+	void newColor()
+	{
+		int r = 169 + (237 - 169) * Progress;
+		int g = 169 + (55 - 169) * Progress;
+		int b = 169 + (55 - 169) * Progress;
+		color(fl_rgb_color(r, g, b));
+	}
+
+};
+
 //выезжающие тексты
 class BoxForBut : Fl_Box
 {
@@ -285,7 +397,7 @@ const GameLevel levels[] =
 
 //глобальные переменные для игры
  
-int game_level = NULL;
+int game_level = 0;
 
 //графика
 void ShowConsole() {
@@ -318,16 +430,16 @@ int main(int argc, char** argv)
 
 	//группа приветственного меню (0)
 	Fl_Group* helloWin = new Fl_Group(0, 0, 1000, 600);
-	MyButton begin(435.5, 250, 125, 60, "Начать");
+	menuBut begin(435.5, 250, 125, 60, "Начать");
 	begin.callback(toGameMenu, helloWin->parent());
 	helloWin->end();
 
 	//группа игрового меню (1)
 	Fl_Group* mainMenu = new Fl_Group(0, 0, 1000, 600);
 
-	MyButton start(100, 150, 150, 75, "Начать игру");
-	MyButton rules(100, 250, 150, 75, "Правила");
-	MyButton exit(100, 350, 150, 75, "Выход");
+	menuBut start(100, 150, 150, 75, "Начать игру");
+	menuBut rules(100, 250, 150, 75, "Правила");
+	menuBut exit(100, 350, 150, 75, "Выход");
 
 	BoxForBut Tstart(300, -32, 291, 32, "Перейти к настройке сложности");
 	BoxForBut Trules(1000, 272, 291, 32, "Ознакомиться с правилами игры");
@@ -345,11 +457,13 @@ int main(int argc, char** argv)
 	TogButton easy(175, 150, 150, 70, "Легко");
 	TogButton normal(425, 150, 150, 70, "Нормально");
 	TogButton hard(675, 150, 150, 70, "Сложно");
-	MyButton back(15, 525, 125, 60, "Назад");
+	menuBut back(15, 525, 125, 60, "Назад");
 
 	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
+
+	PlayBut play(408, 353, 184, 76, "Играть");
 
 
 	back.callback(toGameMenu, &win);
@@ -369,14 +483,14 @@ void toGameMenu(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(1);
-	MyButton* but = NULL;
+	menuBut* but = NULL;
 	if (win->child(0)->visible())
 	{
 		win->child(0)->hide();
 		win->child(1)->show();
 		for (short i = 0; i < 3; i++)
 		{
-			but = (MyButton*)group->child(i);
+			but = (menuBut*)group->child(i);
 			but->reset_state();
 		}
 	}
@@ -387,7 +501,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 		choose_level(w, data);
 		for (short i = 0; i < 3; i++)
 		{
-			but = (MyButton*)group->child(i);
+			but = (menuBut*)group->child(i);
 			but->reset_state();
 		}
 	}
@@ -402,13 +516,13 @@ void toGameSettings(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
-	MyButton* Mybut = NULL; TogButton* TogBut = NULL;
+	menuBut* Mybut = NULL; TogButton* TogBut = NULL;
 
 	for (short i = 0; i < 4; i++)
 	{
 		if (i == 3) 
 		{ 
-			Mybut = (MyButton*)group->child(i);
+			Mybut = (menuBut*)group->child(i);
 			Mybut->reset_state();
 		}
 		else
@@ -467,7 +581,7 @@ void choose_level(Fl_Widget* w, void* data)
 
 void ShowSign(void* data)
 {
-	MyButton* but = (MyButton*)data;
+	menuBut* but = (menuBut*)data;
 	//начать игру
 	if (strcmp(but->label(), "Начать игру") == 0)
 	{
