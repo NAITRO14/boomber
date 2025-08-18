@@ -127,8 +127,6 @@ public:
 			color(fl_rgb_color(100, 100, 105));
 			startAnimation(true);
 			ShowSign(this);
-			/*ShowSignData* data = new ShowSignData{ this, this->inFocus };
-			Fl::add_timeout(0.02, ShowSign, data);*/
 			return 1;
 		}
 		case FL_LEAVE:
@@ -137,8 +135,6 @@ public:
 			color(fl_rgb_color(169, 169, 169));
 			startAnimation(false);
 			ShowSign(this);
-			/*ShowSignData* data = new ShowSignData{ this, this->inFocus };
-			Fl::add_timeout(0.02, ShowSign, data);*/
 			return 1;
 		}
 		}
@@ -161,11 +157,6 @@ public:
 		}
 	}
 private:
-	struct ShowSignData
-	{
-		MyButton* but;
-		bool inFocus;
-	};
 
 	struct animationVal
 	{//переменные для анимации
