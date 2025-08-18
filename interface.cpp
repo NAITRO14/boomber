@@ -21,9 +21,9 @@ using namespace std;
 
 void ShowSign(void* data);
 
-class TogButton : public Fl_Button 
+class TogButton : public Fl_Button
 {
-int Y = y(); //чтобы вернуть кнопку на место
+	int Y = y(); //чтобы вернуть кнопку на место
 public:
 	bool inFocus = false;
 
@@ -35,8 +35,8 @@ public:
 		clear_visible_focus();
 		labelsize(24);
 	}
-	
-	int handle(int event) override 
+
+	int handle(int event) override
 	{
 		switch (event)
 		{
@@ -72,7 +72,7 @@ public:
 		}
 		}
 
-		
+
 		return Fl_Button::handle(event);
 	}
 
@@ -84,7 +84,7 @@ public:
 };
 
 //обычная кнопка 
-class MyButton : public Fl_Button 
+class MyButton : public Fl_Button
 {
 	int Wold = w(), Hold = h(), Xold = x(), Yold = y();
 	int Wnew = 0, Hnew = 0, Xnew = 0, Ynew = 0;
@@ -94,7 +94,7 @@ public:
 	bool inFocus = NULL;
 	//параметры кнопки
 	MyButton(int X, int Y, int W, int H, const char* L = 0)
-		: Fl_Button(X, Y, W, H, L) 
+		: Fl_Button(X, Y, W, H, L)
 	{
 		color(fl_rgb_color(169, 169, 169));
 		selection_color(fl_rgb_color(100, 100, 105));
@@ -103,7 +103,7 @@ public:
 	}
 
 	//обработка событий наведения
-	int handle(int event) override 
+	int handle(int event) override
 	{
 		switch (event)
 		{
@@ -122,7 +122,7 @@ public:
 			return 1;
 		}
 		case FL_LEAVE:
-		{ 
+		{
 			inFocus = false;
 			color(fl_rgb_color(169, 169, 169));
 			startAnimation(false);
@@ -162,7 +162,7 @@ private:
 
 		//кнструктор для анимации
 		animationVal(MyButton* b, int fw, int fh, int cw, int ch, int ox, int oy, int cx, int cy, int ow, int oh, bool act)
-			:but(b), final_w(fw), final_h(fh), cur_w(cw), cur_h(ch), orig_x(ox), orig_y(oy), curX(cx), curY(cy),orig_W(ow), orig_H(oh), action(act){}
+			:but(b), final_w(fw), final_h(fh), cur_w(cw), cur_h(ch), orig_x(ox), orig_y(oy), curX(cx), curY(cy), orig_W(ow), orig_H(oh), action(act) {}
 	};
 	void startAnimation(bool ent)
 	{
@@ -172,12 +172,12 @@ private:
 	}
 
 	//статическая, чтобы не было this
-	static void animation(void*data)
+	static void animation(void* data)
 	{
 		animationVal* anim = (animationVal*)data;
 		MyButton* but = anim->but;
 		if (!anim or !anim->but) return;//проверка чтобы нопка была
-		
+
 		//увеличивать блок
 		if (anim->action == true)
 		{
@@ -239,10 +239,10 @@ private:
 
 class menuBut : public MyButton
 {
-	
+
 public:
 	menuBut(int X, int Y, int W, int H, const char* L = 0)
-		: MyButton(X, Y, W, H, L){}
+		: MyButton(X, Y, W, H, L) {}
 
 	int handle(int event)
 	{
@@ -281,7 +281,7 @@ public:
 };
 
 //дочерний класс для кнопки "играть"
-class  PlayBut : public MyButton 
+class  PlayBut : public MyButton
 {
 	float Progress = 0.0f;
 	bool anim = false;
@@ -366,19 +366,6 @@ public:
 
 };
 
-//выезжающие тексты
-class BoxForBut : Fl_Box
-{
-public:
-	BoxForBut(int X, int Y, int W, int H, const char* L = 0)
-		:Fl_Box(X, Y, W, H, L)
-	{
-		color(fl_rgb_color(169, 169, 169));
-		box(FL_FLAT_BOX);
-		labelsize(18);
-	}
-};
-
 //структуры определения игры
 struct GameLevel
 {
@@ -396,7 +383,7 @@ const GameLevel levels[] =
 };
 
 //глобальные переменные для игры
- 
+
 int game_level = 0;
 
 //графика
@@ -445,7 +432,7 @@ int main(int argc, char** argv)
 	BoxForBut Trules(1000, 272, 291, 32, "Ознакомиться с правилами игры");
 	BoxForBut Texit(300, 600, 291, 32, "Закрыть приложение");
 
-	
+
 	start.callback(toGameSettings, &win);
 	exit.callback(exitf, nullptr);
 	mainMenu->hide();
@@ -494,7 +481,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 			but->reset_state();
 		}
 	}
-	else if(win->child(2)->visible())
+	else if (win->child(2)->visible())
 	{
 		win->child(2)->hide();
 		win->child(1)->show();
@@ -520,8 +507,8 @@ void toGameSettings(Fl_Widget* w, void* data)
 
 	for (short i = 0; i < 4; i++)
 	{
-		if (i == 3) 
-		{ 
+		if (i == 3)
+		{
 			Mybut = (menuBut*)group->child(i);
 			Mybut->reset_state();
 		}
@@ -530,10 +517,10 @@ void toGameSettings(Fl_Widget* w, void* data)
 			TogBut = (TogButton*)group->child(i);
 			TogBut->reset_state();
 		}
-		
+
 	}
-	
-	
+
+
 
 	win->child(1)->hide();
 	win->child(2)->show();
@@ -594,7 +581,7 @@ void ShowSign(void* data)
 
 			Fl::add_timeout(0.005, ShowSign, data);
 		}
-		else if(!but->inFocus and box->y() > -32)
+		else if (!but->inFocus and box->y() > -32)
 		{
 			box->resize(box->x(), box->y() - 4, box->w(), box->h());
 			box->redraw();
@@ -713,7 +700,7 @@ void ShowSign(void* data)
 
 			Fl::add_timeout(0.005, ShowSign, data);
 		}
-		}
+	}
 }
 
 
