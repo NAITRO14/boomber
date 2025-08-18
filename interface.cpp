@@ -267,6 +267,92 @@ public:
 	}
 };
 
+//дочерний класс для кнопки "играть"
+class  PlayBut : MyButton 
+{
+	float Progress = 0.0f;
+	bool anim = false;
+	bool icreasing = false;
+
+	Fl_Color startColor = fl_rgb_color(169, 169, 169);
+	Fl_Color endColor = fl_rgb_color(237, 55, 55);
+public:
+	PlayBut(int X, int Y, int W, int H, const char* L = 0)
+		: MyButton(X, Y, W, H, L) {}
+
+	int handle(int event)
+	{
+		switch (event)
+		{
+		case FL_ENTER:
+		{
+			startAnim(true);
+			if (!PlaySound(TEXT("sounds/pbip.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			{
+				cout << "Звук не найден" << endl;
+			}
+
+		}break;
+		case FL_LEAVE:
+		{
+			startAnim(false);
+		}
+
+		}
+		return MyButton::handle(event);
+	}
+
+	void startAnim(bool inc)
+	{
+		icreasing = inc;
+		anim = true;
+		Progress = icreasing ? 0.0f : 1.0f; //тернарный оператор(if/else)
+
+		Fl::add_timeout(0.02, animation, this);
+	}
+
+	static void animation(void* data)
+	{
+		PlayBut* but = (PlayBut*)data;
+
+		if (but->anim)
+		{
+			if (but->icreasing)
+			{
+				if (but->Progress < 1.0f)
+				{
+					but->Progress += 0.05f;
+				}
+				else { but->anim = false; }
+			}
+			else
+			{
+				if (but->Progress > 0.0f)
+				{
+					but->Progress -= 0.05f;
+				}
+				else { but->anim = false; }
+			}
+		}
+		but->newColor();
+		but->redraw();
+		if (but->anim)
+		{
+			Fl::repeat_timeout(0.02, animation, but);
+		}
+
+	}
+
+	void newColor()
+	{
+		int r = 169 + (237 - 169) * Progress;
+		int g = 169 + (55 - 169) * Progress;
+		int b = 169 + (55 - 169) * Progress;
+		color(fl_rgb_color(r, g, b));
+	}
+
+};
+
 //структуры определения игры
 struct GameLevel
 {
@@ -350,6 +436,8 @@ int main(int argc, char** argv)
 	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
+
+	PlayBut play(408, 353, 184, 76, "Играть");
 
 
 	back.callback(toGameMenu, &win);
