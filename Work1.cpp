@@ -45,141 +45,155 @@ bool inbounds(int row, int col, int rows, int cols);
 void initialize_field(char** field, bool** opened, int rows, int cols);
 void calculate_numbers(char** field, int rows, int cols);
 void win_screen(int moves, int seconds_played);
-void lose_screen(int moves, int seconds_played);
+void lose_screen(char** field, bool** opened, int rows, int cols, int moves, int seconds_played, steady_clock::time_point start_time);//добавил параметр для подсчета времени
 bool check_wins(bool** opened, int rows, int cols, int mines_count);
-
-
 
 int main() {
     srand(time(NULL));
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 
+
+    //обявление переменных для игры
     char res = 0;
+    int rows;
+    int cols;
+    int mines_count;
+    int moves;
+    bool game_over;
+    int first_row, first_col;
+    bool normal_exit;
 
     do {
-        // Выбор уровня сложности
-        cout << "Выберите уровень сложности:" << endl;
-        for (int i = 0; i < LEVELS_COUNT; i++) {
-            cout << i + 1 << ". " << levels[i].name
-                << " (" << levels[i].rows << "x" << levels[i].cols
-                << ", мин: " << levels[i].mines_count << ")" << endl;
-        }
-        int choice;
-        do {
-            cout << "Ваш выбор (1-" << LEVELS_COUNT << "): ";
-            cin >> choice;
-            cin.ignore(); // Очищаем буфер ввода
-        } while (choice < 1 || choice > LEVELS_COUNT);
-        const GameLevel& level = levels[choice - 1];
-        int rows = level.rows;
-        int cols = level.cols;
-        int mines_count = level.mines_count;
-        // Динамическое создание массивов
-        char** field = new char* [rows];
-        bool** opened = new bool* [rows];
-        initialize_field(field, opened, rows, cols);
-        int moves = 0;
-        bool game_over = false;
-        int first_row = -1, first_col = -1;
-        bool normal_exit = false; //  нормальное завершение (не досрочное)
-        auto start_time = steady_clock::now();// запускаем таймер (steady_clock::now возвращает текущий момент времени, монотонно считает время)
-        while (!game_over) {
-            // Вычисляем прошедшее время
-            auto current_time = steady_clock::now();//текущий момент времени
-            auto elapsed_time = duration_cast<seconds>(current_time - start_time);//(current_time - start_time)-вычисляем разницу между стартом и окончанием, duration_cast<seconds> -преобразует длительность в секунды,(current_time - start_time)
-            int seconds_played = elapsed_time.count();//.count() - получаем числовое значение секунд
-
-            print_field1(field, opened, rows, cols, moves, start_time);//добавил параметр и cout время
-            cout << "Уровень: " << level.name << endl;
-            cout << "Ходы: " << moves << endl;
-            cout << "Время: " << seconds_played << " сек." << endl;
-            cout << "Введите координаты (строка столбец) или 'q' для выхода: ";
-            string input;
-            getline(cin, input);
-
-            if (input[0] == 'q' || input[0] == 'Q')
-            {
-                cout << "Выход из игры..." << endl;
-                game_over = true;
-                res = 'n';
-                break; // Выходим без подсчета времени
-            }
-            stringstream ss(input);//положили в ss (input)
-            int r, c;
-            if (!(ss >> r >> c)) {
-                cout << "Ошибка: введите два числа через пробел (например: 5 10)" << endl;
-                continue;
-            }
-
-            // отнимаем 1 для работы
-            r--; c--;
-
-            // Проверяем границы
-            if (!inbounds(r, c, rows, cols)) {
-                cout << "Ошибка: координаты вне диапазона (1-" << rows << " 1-" << cols << ")" << endl;
-                continue;
-            }
-
-            if (opened[r][c]) {
-                cout << "Эта клетка уже открыта!" << endl;
-                Sleep(2000);
-                continue;
-            }
-            // Первый ход - размещаем мины после него, избегая первой клетки
-            if (moves == 0) {
-                first_row = r;
-                first_col = c;
-                place_mines(field, rows, cols, mines_count, first_row, first_col);
-                calculate_numbers(field, rows, cols);
-            }
-            bool hit = open(field, opened, rows, cols, r, c);
-            moves++;
-
-            if (hit) {
-                // Открываем все мины при проигрыше
-                for (int i = 0; i < rows; i++) {
-                    for (int j = 0; j < cols; j++) {
-                        if (field[i][j] == '*') opened[i][j] = true;
-                    }
-                }
-                // Вычисляем итоговое время если проиграли
-                auto end_time = steady_clock::now();//конечный момент времени
-                auto total_time = duration_cast<seconds>(end_time - start_time);//( end_time - start_time)-вычисляем разницу между стартом и окончанием, duration_cast<seconds> -преобразует длительность в секунды,(current_time - start_time)
-
-                print_field1(field, opened, rows, cols, moves, start_time);
-                lose_screen(moves, total_time.count());
-                game_over = true;
-            }
-            else if (check_wins(opened, rows, cols, mines_count))
-            {
-                // Вычисляем итоговое время если победили
-                auto end_time = steady_clock::now();
-                auto total_time = duration_cast<seconds>(end_time - start_time);
-
-                print_field1(field, opened, rows, cols, moves, start_time);
-                win_screen(moves, total_time.count());
-
-                normal_exit = true;
-                game_over = true;
-            }
-        }
-
-        // Освобождение памяти
-        for (int i = 0; i < rows; i++) {
-            delete[] field[i];
-            delete[] opened[i];
-        }
-        delete[] field;
-        delete[] opened;
-
-        if (res != 'n')
-
+        if (res != 'q' || res != 'q')
         {
-            cout << "Хотите сыграть еще раз? (y/n): ";
-            cin >> res;
-            cin.ignore();
-            system("cls");
+            // Выбор уровня сложности
+            cout << "Выберите уровень сложности:" << endl;
+            for (int i = 0; i < LEVELS_COUNT; i++)
+            {
+                cout << i + 1 << ". " << levels[i].name
+                    << " (" << levels[i].rows << "x" << levels[i].cols
+                    << ", мин: " << levels[i].mines_count << ")" << endl;
+            }
+            int choice;
+            do {
+                cout << "Ваш выбор (1-" << LEVELS_COUNT << "): ";
+                cin >> choice;
+                cin.ignore(); // Очищаем буфер ввода
+            } while (choice < 1 || choice > LEVELS_COUNT);
+            const GameLevel& level = levels[choice - 1];
+            int rows = level.rows;
+            int cols = level.cols;
+            int mines_count = level.mines_count;
+            int moves = 0;
+            bool game_over = false;
+            int first_row = -1;
+            int first_col = -1;
+            bool normal_exit = false;//нормальное завершение (не досрочное)
+
+            char** field = new char* [rows];
+            bool** opened = new bool* [rows];
+            initialize_field(field, opened, rows, cols);
+
+            auto start_time = steady_clock::now();// запускаем таймер
+            while (!game_over) {
+                // Вычисляем прошедшее время
+                auto current_time = steady_clock::now();//текущий момент времени
+                auto elapsed_time = duration_cast<seconds>(current_time - start_time);//текущее время-время старта
+                int seconds_played = elapsed_time.count();
+
+                print_field1(field, opened, rows, cols, moves, start_time);//добавил параметр start_time  
+                cout << "Уровень: " << level.name << endl;
+                cout << "Ходы: " << moves << endl;
+                cout << "Время: " << seconds_played << " сек." << endl;//
+                cout << "Введите координаты (строка столбец) или 'q' для выхода: ";
+                string input;
+                getline(cin, input);
+
+                if (input[0] == 'q' || input[0] == 'Q')
+                {
+                    cout << "Выход из игры..." << endl;
+                    game_over = true;
+                    res = 'n';
+                    break; // Выходим без подсчета времени
+                }
+                stringstream ss(input);//положили в ss (input)
+                int r, c;
+                if (!(ss >> r >> c)) {
+                    cout << "Ошибка: введите два числа через пробел (например: 5 10)" << endl;
+                    continue;
+                }
+
+                // отнимаем 1 для работы
+                r--; c--;
+
+                // Проверяем границы
+                if (!inbounds(r, c, rows, cols)) {
+                    cout << "Ошибка: координаты вне диапазона (1-" << rows << " 1-" << cols << ")" << endl;
+                    continue;
+                }
+
+                if (opened[r][c]) {
+                    cout << "Эта клетка уже открыта!" << endl;
+                    Sleep(2000);
+                    continue;
+                }
+                // Первый ход - размещаем мины после него, избегая первой клетки
+                if (moves == 0) {
+                    first_row = r;
+                    first_col = c;
+                    place_mines(field, rows, cols, mines_count, first_row, first_col);
+                    calculate_numbers(field, rows, cols);
+                }
+                bool hit = open(field, opened, rows, cols, r, c);
+                moves++;
+
+                if (hit) {
+                    // Открываем все клетки при проигрыше
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            if (field[i][j] == '*') opened[i][j] = true;
+                        }
+                    }
+
+                    // Вычисляем итоговое время если проиграли
+                    auto end_time = steady_clock::now();
+                    auto total_time = duration_cast<seconds>(end_time - start_time);
+
+                    print_field1(field, opened, rows, cols, moves, start_time);
+                    lose_screen(field, opened, rows, cols, moves, total_time.count(), start_time); // Передаём start_time
+
+                    game_over = true;
+                }
+                else if (check_wins(opened, rows, cols, mines_count))
+                {
+                    // Вычисляем итоговое время если победили
+                    auto end_time = steady_clock::now();
+                    auto total_time = duration_cast<seconds>(end_time - start_time);
+
+                    print_field1(field, opened, rows, cols, moves, start_time);
+                    win_screen(moves, total_time.count());
+
+                    normal_exit = true;
+                    game_over = true;
+                }
+            }
+
+            // Освобождение памяти
+            for (int i = 0; i < rows; i++) {
+                delete[] field[i];
+                delete[] opened[i];
+            }
+            delete[] field;
+            delete[] opened;
+
+            if (res != 'n' || res != 'N')
+            {
+                cout << "Хотите сыграть еще раз? (Если да нажмите - y /если нет - n): ";
+                cin >> res;
+                cin.ignore();
+                system("cls");
+            }
         }
     } while (res == 'y' || res == 'Y');
     cout << "Спасибо за игру!" << endl;
@@ -206,7 +220,7 @@ void place_mines(char** _field, int rows, int cols, int mines_count, int first_r
         int x = rand() % rows;
         int y = rand() % cols;
 
-        // Не ставим мину в первую клетку и в соседние клетки
+        // Не ставим мину в первую и в соседние клетки
         if ((x == first_row && y == first_col) || (abs(x - first_row) <= 1 && abs(y - first_col) <= 1))
         {
             continue;
@@ -220,7 +234,6 @@ void place_mines(char** _field, int rows, int cols, int mines_count, int first_r
     }
     save_field_to_file(_field, rows, cols, "MINES.txt");
 }
-
 // добавил в функцию  отображение времени
 void print_field1(char** _field, bool** _opened, int rows, int cols, int moves, steady_clock::time_point start_time) {
     system("cls");
@@ -241,31 +254,47 @@ void print_field1(char** _field, bool** _opened, int rows, int cols, int moves, 
     {
         cout << "-";
     }
-    cout << "+\n";
+    cout << "-+\n";
 
     // Вывод строк поля
-    for (int i = 0; i < rows; i++) 
-    {
+    for (int i = 0; i < rows; i++) {
         cout << setw(2) << i + 1 << " |"; // Номер строки
-        for (int j = 0; j < cols; j++) 
-        {
-            if (_opened[i][j])
-            {
-                if (_field[i][j] == '*')
-                {
+        for (int j = 0; j < cols; j++) {
+            if (_opened[i][j]) {
+
+                if (_field[i][j] == '*') {
+                    SetColor(4, 0);
                     cout << " * ";
+                    SetColor(7, 0);
                 }
                 else if (_field[i][j] == '0') {
-                    cout << " . ";
+                    SetColor(2, 0);
+                    cout << " V ";
+                    SetColor(7, 0);
                 }
                 else
                 {
+                    // Разные цвета для разных цифр
+                    switch (_field[i][j]) {
+                    case '1': SetColor(3, 0); break;
+                    case '2': SetColor(2, 0); break;
+                    case '3': SetColor(4, 0); break;
+                    case '4': SetColor(10, 0); break;
+                    case '5': SetColor(11, 0); break;
+                    case '6': SetColor(6, 0); break;
+                    case '7': SetColor(12, 0); break;
+                    case '8': SetColor(8, 0); break;
+                    }
+
                     cout << " " << _field[i][j] << " ";
+                    SetColor(7, 0);
                 }
             }
             else
             {
-                cout << " 0 ";
+                SetColor(14, 0);
+                cout << " W ";
+                SetColor(7, 0);
             }
         }
         cout << "|\n";
@@ -276,7 +305,7 @@ void print_field1(char** _field, bool** _opened, int rows, int cols, int moves, 
     for (int i = 0; i < cols * 3 - 1; i++) {
         cout << "-";
     }
-    cout << "+\n";
+    cout << "-+\n";
 
     // Вывод времени и ходов
     cout << "Время: " << seconds_played << " сек. | Ходы: " << moves << endl;
@@ -315,14 +344,20 @@ void win_screen(int moves, int seconds_played) {
     cout << " Затраченное время: " << seconds_played << " сек." << endl;// добавил строку время
     cout << "*******************************" << endl;
 }
-
-void lose_screen(int moves, int seconds_played) {
+//доработал эту функцию для того, чтобы при проигрыше показывалось поле с минами с задержкой
+void lose_screen(char** field, bool** opened, int rows, int cols, int moves, int seconds_played, steady_clock::time_point start_time) {
+    system("cls");
+    // Показываем поле с минами с актуальным временем
+    print_field1(field, opened, rows, cols, moves, start_time);
+    cout << "\nВы наступили на мину! Игра окончена.\n";
+    Sleep(5000); // Задержка 5 секунд
+    // Затем показываем экран поражения
     system("cls");
     cout << "*******************************" << endl;
     cout << " К сожалению вы наступили на мину! " << endl;
     cout << " Игра окончена! Вы проиграли! " << endl;
     cout << " Количество ходов: " << moves << setw(5) << endl;
-    cout << " Затраченное время: " << seconds_played << " сек." << endl;// добавил строку время
+    cout << " Затраченное время: " << seconds_played << " сек." << endl;
     cout << "*******************************" << endl;
 }
 
@@ -372,7 +407,6 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
 
     fclose(file);
 }
-
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
 {
     if (!inbounds(_row, _col, rows, cols)) return;
