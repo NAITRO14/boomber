@@ -283,15 +283,17 @@ public:
 //дочерний класс для кнопки "играть"
 class  PlayBut : public MyButton
 {
-	float Progress = 0.0f;
-	bool anim = false;
-	bool icreasing = false;
+	
 
 	Fl_Color startColor = fl_rgb_color(169, 169, 169);
 	Fl_Color endColor = fl_rgb_color(237, 55, 55);
 public:
 	PlayBut(int X, int Y, int W, int H, const char* L = 0)
 		: MyButton(X, Y, W, H, L) {}
+
+	float Progress = 0.0f;
+	bool anim = false;
+	bool icreasing = false;
 
 	int handle(int event)
 	{
@@ -401,6 +403,7 @@ void choose_level(Fl_Widget* w, void* data);
 void Game(Fl_Widget* w, void* data);
 
 
+
 int main(int argc, char** argv)
 {
 	//настройка звука приложения
@@ -463,16 +466,19 @@ int main(int argc, char** argv)
 	game_settings->end();
 	game_settings->hide();
 
-	//группа легкой сложности
+	//группа легкой сложности (3)
 	
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
 	short x, y;
 	const short size = 10;
 	Fl_Button* ez[size][size];
 
-	BoxForBut et1(620, 37, 350, 60, "asda");
+	BoxForBut et1(620, 37, 350, 60); 
+	Fl_Box cur_time(620, 37, 175, 60, "Время:"); 
 
-	BoxForBut et2(620, 131, 350, 246, "asda");
+	Fl_Box cur_steps(795, 37, 175, 60, "Ходов:0");
+
+	BoxForBut et2(620, 131, 350, 246);
 
 	menuBut leaveLvl(606, 510, 169, 63, "В меню");
 	menuBut againLvl(814, 510, 169, 63, "Заново");
@@ -505,39 +511,25 @@ int main(int argc, char** argv)
 void toGameMenu(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
-	Fl_Group* group = (Fl_Group*)win->child(1);
-	menuBut* but = NULL;
+	menuBut* self = (menuBut*)w;
+	self->reset_state();
+
 	if (win->child(0)->visible())
 	{
 		win->child(0)->hide();
 		win->child(1)->show();
-		for (short i = 0; i < 3; i++)
-		{
-			but = (menuBut*)group->child(i);
-			but->reset_state();
-		}
 	}
 	else if (win->child(2)->visible())
 	{
 		win->child(2)->hide();
 		win->child(1)->show();
 		choose_level(w, data);
-		for (short i = 0; i < 3; i++)
-		{
-			but = (menuBut*)group->child(i);
-			but->reset_state();
-		}
 	}
 	else if (win->child(3)->visible())
 	{
 		win->child(3)->hide();
 		win->child(1)->show();
 		choose_level(w, data);
-		for (short i = 0; i < 3; i++)
-		{
-			but = (menuBut*)group->child(i);
-			but->reset_state();
-		}
 	}
 }
 
@@ -550,25 +542,15 @@ void toGameSettings(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
-	menuBut* Mybut = NULL; TogButton* TogBut = NULL;
+	TogButton* TogBut = NULL;
+	menuBut* self = (menuBut*)w;
+	self->reset_state();
 
-	for (short i = 0; i < 5; i++)
+	for (short i = 0; i < 3; i++)
 	{
-		if (i == 3)// 3 - back
-		{
-			Mybut = (menuBut*)group->child(i);
-			Mybut->reset_state();
-		}
-		else
-		{
-			TogBut = (TogButton*)group->child(i);
-			TogBut->reset_state();
-		}
-
+		TogBut = (TogButton*)group->child(i);
+		TogBut->reset_state();
 	}
-
-
-
 	win->child(1)->hide();
 	win->child(2)->show();
 }
@@ -617,6 +599,9 @@ void Game(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	win->child(2)->hide();
+	PlayBut* self = (PlayBut*)w;
+	self->icreasing = false;
+	self->reset_state();
 
 	if (game_level == 0)
 	{
@@ -629,6 +614,7 @@ void Game(Fl_Widget* w, void* data)
 
 
 }
+
 
 void ShowSign(void* data)
 {
