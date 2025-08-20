@@ -277,8 +277,8 @@ void print_field1(char** _field, bool** _opened, int rows, int cols, int moves, 
                     // Разные цвета для разных цифр
                     switch (_field[i][j]) {
                     case '1': SetColor(3, 0); break;
-                    case '2': SetColor(2, 0); break;
-                    case '3': SetColor(4, 0); break;
+                    case '2': SetColor(9, 0); break;
+                    case '3': SetColor(1, 0); break;
                     case '4': SetColor(10, 0); break;
                     case '5': SetColor(11, 0); break;
                     case '6': SetColor(6, 0); break;
@@ -354,7 +354,7 @@ void lose_screen(char** field, bool** opened, int rows, int cols, int moves, int
     // Затем показываем экран поражения
     system("cls");
     cout << "*******************************" << endl;
-    cout << " К сожалению вы наступили на мину! " << endl;
+    cout << " К сожалению, вы наступили на мину! " << endl;
     cout << " Игра окончена! Вы проиграли! " << endl;
     cout << " Количество ходов: " << moves << setw(5) << endl;
     cout << " Затраченное время: " << seconds_played << " сек." << endl;
