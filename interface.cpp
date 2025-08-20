@@ -398,6 +398,7 @@ void toGameMenu(Fl_Widget* w, void* data);
 void exitf(Fl_Widget* w, void* data);
 void toGameSettings(Fl_Widget* w, void* data);
 void choose_level(Fl_Widget* w, void* data);
+void Game(Fl_Widget* w, void* data);
 
 
 int main(int argc, char** argv)
@@ -445,21 +446,56 @@ int main(int argc, char** argv)
 	TogButton normal(425, 150, 150, 70, "Нормально");
 	TogButton hard(675, 150, 150, 70, "Сложно");
 	menuBut back(15, 525, 125, 60, "Назад");
+	 
+	PlayBut play(408, 353, 184, 76, "Играть");
 
 	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
 
-	PlayBut play(408, 353, 184, 76, "Играть");
+	
 
-
+	play.callback(Game, &win);
 	back.callback(toGameMenu, &win);
 	easy.callback(choose_level, &win);
 	normal.callback(choose_level, &win);
 	hard.callback(choose_level, &win);
-
-	game_settings->hide();
 	game_settings->end();
+	game_settings->hide();
+
+	//группа легкой сложности
+	
+	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
+	short x, y;
+	const short size = 10;
+	Fl_Button* ez[size][size];
+
+	BoxForBut et1(620, 37, 350, 60, "asda");
+
+	BoxForBut et2(620, 131, 350, 246, "asda");
+
+	menuBut leaveLvl(606, 510, 169, 63, "В меню");
+	menuBut againLvl(814, 510, 169, 63, "Заново");
+
+
+
+	//игровое поле
+	y = 10;
+	for(short i = 0; i < size; i++)
+	{
+		x = 10;
+		for (short j = 0; j < size; j++)
+		{
+			ez[i][j] = new Fl_Button(x, y, 58, 58);
+			x += 58;
+		}
+		y += 58;
+	}
+
+	leaveLvl.callback(toGameMenu, &win);
+
+	ez_g->end();
+	ez_g->hide();
 
 	win.end();
 	win.show(argc, argv);
@@ -492,6 +528,17 @@ void toGameMenu(Fl_Widget* w, void* data)
 			but->reset_state();
 		}
 	}
+	else if (win->child(3)->visible())
+	{
+		win->child(3)->hide();
+		win->child(1)->show();
+		choose_level(w, data);
+		for (short i = 0; i < 3; i++)
+		{
+			but = (menuBut*)group->child(i);
+			but->reset_state();
+		}
+	}
 }
 
 void exitf(Fl_Widget* w, void* data)
@@ -505,9 +552,9 @@ void toGameSettings(Fl_Widget* w, void* data)
 	Fl_Group* group = (Fl_Group*)win->child(2);
 	menuBut* Mybut = NULL; TogButton* TogBut = NULL;
 
-	for (short i = 0; i < 4; i++)
+	for (short i = 0; i < 5; i++)
 	{
-		if (i == 3)
+		if (i == 3)// 3 - back
 		{
 			Mybut = (menuBut*)group->child(i);
 			Mybut->reset_state();
@@ -564,6 +611,23 @@ void choose_level(Fl_Widget* w, void* data)
 	}
 
 	win->redraw();
+}
+
+void Game(Fl_Widget* w, void* data)
+{
+	Fl_Double_Window* win = (Fl_Double_Window*)data;
+	win->child(2)->hide();
+
+	if (game_level == 0)
+	{
+		win->child(2)->show();
+	}
+	else if (game_level == 1)
+	{
+		win->child(3)->show();
+	}
+
+
 }
 
 void ShowSign(void* data)
@@ -635,7 +699,7 @@ void ShowSign(void* data)
 	//легко
 	else if (strcmp(but->label(), "Легко") == 0)
 	{
-		Fl_Widget* box = but->parent()->child(4);
+		Fl_Widget* box = but->parent()->child(5);
 		TogButton* tBut = (TogButton*)data;
 
 		if (tBut->inFocus and box->y() < 0)
@@ -658,7 +722,7 @@ void ShowSign(void* data)
 	//нормально
 	else if (strcmp(but->label(), "Нормально") == 0)
 	{
-		Fl_Widget* box = but->parent()->child(5);
+		Fl_Widget* box = but->parent()->child(6);
 		TogButton* tBut = (TogButton*)data;
 
 		if (tBut->inFocus and box->y() < 0)
@@ -681,7 +745,7 @@ void ShowSign(void* data)
 	//сложно
 	else if (strcmp(but->label(), "Сложно") == 0)
 	{
-		Fl_Widget* box = but->parent()->child(6);
+		Fl_Widget* box = but->parent()->child(7);
 		TogButton* tBut = (TogButton*)data;
 
 		if (tBut->inFocus and box->y() < 0)
