@@ -68,19 +68,32 @@ int main() {
         if (res != 'q' || res != 'q')
         {
             // Выбор уровня сложности
-            cout << "Выберите уровень сложности:" << endl;
-            for (int i = 0; i < LEVELS_COUNT; i++)
-            {
-                cout << i + 1 << ". " << levels[i].name
-                    << " (" << levels[i].rows << "x" << levels[i].cols
-                    << ", мин: " << levels[i].mines_count << ")" << endl;
-            }
             int choice;
-            do {
+            do
+            {
+                cout << "Выберите уровень сложности:" << endl;
+                for (int i = 0; i < LEVELS_COUNT; i++)
+                {
+                    cout << i + 1 << ". " << levels[i].name
+                        << " (" << levels[i].rows << "x" << levels[i].cols
+                        << ", мин: " << levels[i].mines_count << ")" << endl;
+                }
                 cout << "Ваш выбор (1-" << LEVELS_COUNT << "): ";
                 cin >> choice;
-                cin.ignore(); // Очищаем буфер ввода
-            } while (choice < 1 || choice > LEVELS_COUNT);
+
+                if (choice <= 0 || choice > LEVELS_COUNT || cin.fail())
+                {
+                    system("cls");
+                    cin.clear();
+                    cin.ignore();
+                    cout << "Ошибка! Введите число от 1 до " << LEVELS_COUNT << endl;
+                    choice = 0;
+                    system("pause");
+                    system("cls");
+                }
+
+
+            } while (choice <= 0 || choice > LEVELS_COUNT || cin.fail());
             const GameLevel& level = levels[choice - 1];
             int rows = level.rows;
             int cols = level.cols;
