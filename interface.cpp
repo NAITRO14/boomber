@@ -376,6 +376,13 @@ struct GameLevel
 	int mines_count;
 	string name;
 };
+struct GameData
+{
+	short level;
+	Fl_Button* ButAr[20][25];
+	char** field;
+	Fl_Button* pedBut;
+};
 
 const GameLevel levels[] =
 {
@@ -387,6 +394,12 @@ const GameLevel levels[] =
 //глобальные переменные для игры
 
 int game_level = 0;
+GameData GData;
+
+//функционал
+void initialize_field(char** field, bool** opened, int rows, int cols);
+void place_mines(char** _field, int rows, int cols, int mines_count, Fl_Button* ButAr);
+void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
 
 //графика
 void ShowConsole() {
@@ -401,8 +414,9 @@ void exitf(Fl_Widget* w, void* data);
 void toGameSettings(Fl_Widget* w, void* data);
 void choose_level(Fl_Widget* w, void* data);
 void Game(Fl_Widget* w, void* data);
+void ButPressed(Fl_Widget* w, void* data);
 
-
+short moves = 0;
 
 int main(int argc, char** argv)
 {
@@ -412,6 +426,8 @@ int main(int argc, char** argv)
 	waveOutSetVolume(NULL, volume);*/
 
 	//ЕСЛИ НОВЫЕ ВИДЖЕТЫ НЕ ОТРИСОВЫВАЮТСЯ, НУЖНО ПРОВЕРИТЬ ФУНКЦИИ. ГДЕ-ТО ОНИ МОГУТ ЯВНО ПРИВОДИТЬСЯ К НЕВЕРНОМУ КЛАССУ!!!
+
+	
 
 	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
@@ -483,8 +499,6 @@ int main(int argc, char** argv)
 	menuBut leaveLvl(606, 510, 169, 63, "В меню");
 	menuBut againLvl(814, 510, 169, 63, "Заново");
 
-
-
 	//игровое поле
 	y = 10;
 	for(short i = 0; i < size; i++)
@@ -493,6 +507,8 @@ int main(int argc, char** argv)
 		for (short j = 0; j < size; j++)
 		{
 			ez[i][j] = new Fl_Button(x, y, 58, 58);
+			GData.ButAr[i][j] = ez[i][j];
+			ez[i][j]->callback(ButPressed, ez);
 			x += 58;
 		}
 		y += 58;
@@ -513,6 +529,8 @@ void toGameMenu(Fl_Widget* w, void* data)
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	menuBut* self = (menuBut*)w;
 	self->reset_state();
+
+	game_level = 0; moves = 0;
 
 	if (win->child(0)->visible())
 	{
@@ -560,8 +578,6 @@ void choose_level(Fl_Widget* w, void* data)
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	Fl_Group* group = (Fl_Group*)win->child(2);
 
-	game_level = 0;
-
 	for (short i = 0; i < 3; i++)
 	{
 		group->child(i)->color(fl_rgb_color(169, 169, 169));
@@ -592,6 +608,8 @@ void choose_level(Fl_Widget* w, void* data)
 		cout << "Сложность сброшена" << endl;
 	}
 
+	GData.level = game_level;
+
 	win->redraw();
 }
 
@@ -603,6 +621,10 @@ void Game(Fl_Widget* w, void* data)
 	self->icreasing = false;
 	self->reset_state();
 
+	Fl_Group* gr = (Fl_Group*)win->child(3);
+
+	Fl_Button* arr = (Fl_Button*)gr->child(3);
+
 	if (game_level == 0)
 	{
 		win->child(2)->show();
@@ -611,8 +633,47 @@ void Game(Fl_Widget* w, void* data)
 	{
 		win->child(3)->show();
 	}
+	else if (game_level == 2)
+	{
+		
+	}
+	else if (game_level == 3)
+	{
+		
+	}
+	if (game_level != 0)
+	{
+		const GameLevel& level = levels[game_level - 1];
 
+		short rows = level.rows;
+		short cols = level.cols;
+		short mines_count = level.mines_count;
+		short moves = 0;
+		short first_row = -1, first_col = -1;
 
+		char** field = new char* [rows];
+		bool** opened = new bool* [rows];
+
+		GData.field = field;
+
+		initialize_field(field, opened, rows, cols);
+	}
+	
+
+}
+
+void ButPressed(Fl_Widget* w, void* data)
+{
+	GData.pedBut = (Fl_Button*)w;
+
+	if (moves != 0)
+	{
+		moves += 1;
+	}
+	else
+	{
+		place_mines(GData.field, levels[GData.level].rows, levels[GData.level].cols, levels[GData.level].mines_count, GData.ButAr[20][25]);
+	}
 }
 
 
@@ -753,4 +814,85 @@ void ShowSign(void* data)
 	}
 }
 
+//функционал
+void initialize_field(char** field, bool** opened, int rows, int cols)
+{
+	for (int i = 0; i < rows; i++) {
+		field[i] = new char[cols];
+		opened[i] = new bool[cols];
+		for (int j = 0; j < cols; j++) {
+			field[i][j] = '0'; // Временно заполняем нулями
+			opened[i][j] = false;
+		}
+	}
+}
 
+void place_mines(char** _field, int rows, int cols, int mines_count, Fl_Button* ButAr)
+{
+	int mines_placed = 0;
+	while (mines_placed < mines_count)
+	{
+		int x = rand() % rows;
+		int y = rand() % cols;
+
+		// Не ставим мину в первую и в соседние клетки
+		if ((x == first_row && y == first_col) || (abs(x - first_row) <= 1 && abs(y - first_col) <= 1))
+		{
+			continue;
+		}
+
+		if (_field[x][y] != '*')
+		{
+			_field[x][y] = '*';
+			mines_placed++;
+		}
+	}
+	save_field_to_file(_field, rows, cols, "MINES.txt");
+}
+
+void save_field_to_file(char** _field, int rows, int cols, const char* _filename)
+{
+	FILE* file = fopen(_filename, "w");
+	if (!file)
+	{
+		cout << "Ошибка записи!" << endl;
+		return;
+	}
+
+	// Записываем номера столбцов
+	fprintf(file, "    ");
+	for (int j = 1; j <= cols; j++)
+	{
+		fprintf(file, "%2d ", j);
+	}
+	fprintf(file, "\n");
+
+	// Верхняя граница
+	fprintf(file, "   +");
+	for (int i = 0; i < cols * 3 - 1; i++)
+	{
+		fprintf(file, "-");
+	}
+	fprintf(file, "+\n");
+
+	// Записываем строки поля
+	for (int i = 0; i < rows; i++)
+	{
+		fprintf(file, "%2d |", i + 1); // Номер строки
+		for (int j = 0; j < cols; j++)
+		{
+			fprintf(file, " %c ", _field[i][j]);
+		}
+		fprintf(file, "|\n");
+	}
+
+	// Нижняя граница
+	fprintf(file, "   +");
+	for (int i = 0; i < cols * 3 - 1; i++)
+	{
+		fprintf(file, "-");
+	}
+	fprintf(file, "+\n");
+
+	fclose(file);
+}
