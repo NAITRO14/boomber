@@ -20,7 +20,7 @@
 using namespace std;
 
 void ShowSign(void* data);
-
+//переключаемые кнопки
 class TogButton : public Fl_Button
 {
 	int Y = y(); //чтобы вернуть кнопку на место
@@ -83,7 +83,7 @@ public:
 	}
 };
 
-//обычная кнопка 
+//общий класс кнопки
 class MyButton : public Fl_Button
 {
 	int Wold = w(), Hold = h(), Xold = x(), Yold = y();
@@ -237,6 +237,7 @@ private:
 	}
 };
 
+//дочерний для кнопок в меню
 class menuBut : public MyButton
 {
 
@@ -368,6 +369,17 @@ public:
 
 };
 
+class PGBut : public Fl_Button
+{
+public:
+	PGBut(int X, int Y, int W, int H, const char* L = 0)
+		: Fl_Button(X, Y, W, H, L)
+	{
+		
+	}
+		
+};
+
 //структуры определения игры
 struct GameLevel
 {
@@ -379,9 +391,9 @@ struct GameLevel
 struct GameData
 {
 	short level;
-	Fl_Button* ButAr[20][25];
+	PGBut* ButAr[20][25];
 	char** field;
-	Fl_Button* pedBut;
+	PGBut* pedBut;
 };
 
 const GameLevel levels[] =
@@ -398,8 +410,11 @@ GameData GData;
 
 //функционал
 void initialize_field(char** field, bool** opened, int rows, int cols);
-void place_mines(char** _field, int rows, int cols, int mines_count, Fl_Button* ButAr);
+void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr);
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
+void open(short i, short j);
+bool inbounds(int row, int col, int rows, int cols);
+void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 
 //графика
 void ShowConsole() {
@@ -430,7 +445,7 @@ int main(int argc, char** argv)
 	
 
 	HideConsole();
-	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8);
+	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
 
 	win.color(fl_rgb_color(192, 192, 192));
@@ -487,7 +502,7 @@ int main(int argc, char** argv)
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
 	short x, y;
 	const short size = 10;
-	Fl_Button* ez[size][size];
+	PGBut* ez[size][size];
 
 	BoxForBut et1(620, 37, 350, 60); 
 	Fl_Box cur_time(620, 37, 175, 60, "Время:"); 
@@ -506,7 +521,7 @@ int main(int argc, char** argv)
 		x = 10;
 		for (short j = 0; j < size; j++)
 		{
-			ez[i][j] = new Fl_Button(x, y, 58, 58);
+			ez[i][j] = new PGBut(x, y, 58, 58);
 			GData.ButAr[i][j] = ez[i][j];
 			ez[i][j]->callback(ButPressed, ez);
 			x += 58;
@@ -623,7 +638,7 @@ void Game(Fl_Widget* w, void* data)
 
 	Fl_Group* gr = (Fl_Group*)win->child(3);
 
-	Fl_Button* arr = (Fl_Button*)gr->child(3);
+	PGBut* arr = (PGBut*)gr->child(3);
 
 	if (game_level == 0)
 	{
@@ -643,18 +658,14 @@ void Game(Fl_Widget* w, void* data)
 	}
 	if (game_level != 0)
 	{
-		const GameLevel& level = levels[game_level - 1];
+		const GameLevel level = levels[game_level - 1];
 
 		short rows = level.rows;
 		short cols = level.cols;
 		short mines_count = level.mines_count;
-		short moves = 0;
-		short first_row = -1, first_col = -1;
 
 		char** field = new char* [rows];
 		bool** opened = new bool* [rows];
-
-		GData.field = field;
 
 		initialize_field(field, opened, rows, cols);
 	}
@@ -664,15 +675,36 @@ void Game(Fl_Widget* w, void* data)
 
 void ButPressed(Fl_Widget* w, void* data)
 {
-	GData.pedBut = (Fl_Button*)w;
+	GData.pedBut = (PGBut*)w;
 
 	if (moves != 0)
 	{
 		moves += 1;
+		for (short i = 0; i < levels[GData.level-1].rows; i++)
+		{
+			for (short j = 0; j < levels[GData.level-1].cols; j++)
+			{
+				if (GData.ButAr[i][j] == GData.pedBut)
+				{
+					open(i, j);
+				}
+			}
+		}
 	}
 	else
 	{
-		place_mines(GData.field, levels[GData.level].rows, levels[GData.level].cols, levels[GData.level].mines_count, GData.ButAr[20][25]);
+		moves++;
+		place_mines(GData.field, levels[GData.level-1].rows, levels[GData.level-1].cols, levels[GData.level-1].mines_count, GData.ButAr[0][0]);
+		for (short i = 0; i < levels[GData.level - 1].rows; i++)
+		{
+			for (short j = 0; j < levels[GData.level - 1].cols; j++)
+			{
+				if (GData.ButAr[i][j] == GData.pedBut)
+				{
+					open(i, j);
+				}
+			}
+		}
 	}
 }
 
@@ -825,21 +857,16 @@ void initialize_field(char** field, bool** opened, int rows, int cols)
 			opened[i][j] = false;
 		}
 	}
+	GData.field = field;
 }
 
-void place_mines(char** _field, int rows, int cols, int mines_count, Fl_Button* ButAr)
+void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr)
 {
 	int mines_placed = 0;
 	while (mines_placed < mines_count)
 	{
 		int x = rand() % rows;
 		int y = rand() % cols;
-
-		// Не ставим мину в первую и в соседние клетки
-		if ((x == first_row && y == first_col) || (abs(x - first_row) <= 1 && abs(y - first_col) <= 1))
-		{
-			continue;
-		}
 
 		if (_field[x][y] != '*')
 		{
@@ -895,4 +922,39 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
 	fprintf(file, "+\n");
 
 	fclose(file);
+}
+
+bool inbounds(int row, int col, int rows, int cols)
+{
+	return row >= 0 && row < rows && col >= 0 && col < cols;
+}
+
+void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
+{
+	if (!inbounds(_row, _col, rows, cols)) return;
+	if (_opened[_row][_col]) return;
+
+	_opened[_row][_col] = true;
+	if (_field[_row][_col] != '0') return;
+
+	int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+	int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+
+	for (int k = 0; k < 8; k++)
+	{
+		open_empty(_field, _opened, rows, cols, _row + dx[k], _col + dy[k]);
+	}
+}
+
+void open(short i, short j)
+{
+	if (GData.field[i][j] == '0')
+	{
+		GData.pedBut->box(FL_DOWN_BOX);
+	}
+	else if (GData.field[i][j] == '*')
+	{
+		GData.pedBut->box(FL_DOWN_BOX);
+		GData.pedBut->label("*");
+	}
 }
