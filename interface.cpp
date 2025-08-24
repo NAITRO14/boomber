@@ -394,6 +394,7 @@ struct GameData
 	PGBut* ButAr[20][25];
 	char** field;
 	PGBut* pedBut;
+	bool** opened;
 };
 
 const GameLevel levels[] =
@@ -415,6 +416,10 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
 void open(short i, short j);
 bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
+void calculate_numbers(char** field, int rows, int cols);
+
+int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 
 //графика
 void ShowConsole() {
@@ -702,6 +707,7 @@ void ButPressed(Fl_Widget* w, void* data)
 				if (GData.ButAr[i][j] == GData.pedBut)
 				{
 					open(i, j);
+					calculate_numbers(GData.field, levels[GData.level].rows, levels[GData.level].cols);
 				}
 			}
 		}
@@ -858,6 +864,7 @@ void initialize_field(char** field, bool** opened, int rows, int cols)
 		}
 	}
 	GData.field = field;
+	GData.opened = opened;
 }
 
 void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr)
@@ -937,12 +944,31 @@ void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int
 	_opened[_row][_col] = true;
 	if (_field[_row][_col] != '0') return;
 
-	int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
-	int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
-
 	for (int k = 0; k < 8; k++)
 	{
 		open_empty(_field, _opened, rows, cols, _row + dx[k], _col + dy[k]);
+	}
+}
+
+void calculate_numbers(char** field, int rows, int cols)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			if (field[i][j] == '*') continue;
+
+			int count = 0;
+			for (int k = 0; k < 8; k++)
+			{
+				int ni = i + dx[k], nj = j + dy[k];
+				if (inbounds(ni, nj, rows, cols) && field[ni][nj] == '*')
+				{
+					count++;
+				}
+			}
+			field[i][j] = '0' + count;
+		}
 	}
 }
 
@@ -951,10 +977,16 @@ void open(short i, short j)
 	if (GData.field[i][j] == '0')
 	{
 		GData.pedBut->box(FL_DOWN_BOX);
+		open_empty(GData.field, GData.opened, levels[GData.level-1].rows, levels[GData.level-1].cols, i, j);
 	}
 	else if (GData.field[i][j] == '*')
 	{
 		GData.pedBut->box(FL_DOWN_BOX);
 		GData.pedBut->label("*");
 	}
+	else
+	{
+		GData.opened[i][j] = true;
+	}
+	GData.opened[i][j] = true;
 }
