@@ -422,7 +422,7 @@ int game_level = 0;
 GameData GData;
 
 //функционал
-void initialize_field(char** field, bool** opened, int rows, int cols);
+void initialize_field();
 void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr);
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
 bool open(short i, short j);
@@ -584,6 +584,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 	{
 		win->child(3)->hide();
 		win->child(1)->show();
+		again(nullptr, nullptr);
 		choose_level(w, data);
 	}
 }
@@ -658,10 +659,6 @@ void Game(Fl_Widget* w, void* data)
 	self->icreasing = false;
 	self->reset_state();
 
-	Fl_Group* gr = (Fl_Group*)win->child(3);
-
-	PGBut* arr = (PGBut*)gr->child(3);
-
 	if (game_level == 0)
 	{
 		win->child(2)->show();
@@ -701,18 +698,7 @@ void ButPressed(Fl_Widget* w, void* data)
 	else
 	{
 		moves++;
-		
-
-		const GameLevel level = levels[game_level - 1];
-
-		short rows = level.rows;
-		short cols = level.cols;
-		short mines_count = level.mines_count;
-
-		char** field = new char* [rows];
-		bool** opened = new bool* [rows];
-
-		initialize_field(field, opened, rows, cols);
+		initialize_field();
 
 		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count, GData.ButAr[0][0]);
 		calculate_numbers(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols);
@@ -868,8 +854,13 @@ void ShowSign(void* data)
 }
 
 //функционал
-void initialize_field(char** field, bool** opened, int rows, int cols)
+void initialize_field()
 {
+	short rows = levels[GData.level-1].rows;
+	short cols = levels[GData.level - 1].cols;
+
+	char** field = new char* [rows];
+	bool** opened = new bool* [rows];
 	for (int i = 0; i < rows; i++) {
 		field[i] = new char[cols];
 		opened[i] = new bool[cols];
