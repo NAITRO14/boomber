@@ -375,9 +375,20 @@ public:
 	PGBut(int X, int Y, int W, int H, const char* L = 0)
 		: Fl_Button(X, Y, W, H, L)
 	{
-		
+		color(fl_rgb_color(233, 240, 234));
+		selection_color(fl_rgb_color(100, 100, 105));
+		labelfont(FL_HELVETICA_BOLD);
+		clear_visible_focus();
+		labelsize(25);
 	}
-		
+	
+	void reset_state()
+	{
+		color(fl_rgb_color(233, 240, 234));
+		box(FL_UP_BOX);
+		labelcolor(FL_BLACK);
+		label("");
+	}
 };
 
 //структуры определения игры
@@ -419,6 +430,7 @@ bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 void calculate_numbers(char** field, int rows, int cols);
 
+
 int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
 int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 
@@ -436,6 +448,7 @@ void toGameSettings(Fl_Widget* w, void* data);
 void choose_level(Fl_Widget* w, void* data);
 void Game(Fl_Widget* w, void* data);
 void ButPressed(Fl_Widget* w, void* data);
+void again(Fl_Widget* w, void* data);
 void redraw();
 
 short moves = 0;
@@ -538,6 +551,7 @@ int main(int argc, char** argv)
 	}
 
 	leaveLvl.callback(toGameMenu, &win);
+	againLvl.callback(again, nullptr);
 
 	ez_g->end();
 	ez_g->hide();
@@ -664,21 +678,6 @@ void Game(Fl_Widget* w, void* data)
 	{
 		
 	}
-	if (game_level != 0)
-	{
-		const GameLevel level = levels[game_level - 1];
-
-		short rows = level.rows;
-		short cols = level.cols;
-		short mines_count = level.mines_count;
-
-		char** field = new char* [rows];
-		bool** opened = new bool* [rows];
-
-		initialize_field(field, opened, rows, cols);
-	}
-	
-
 }
 
 void ButPressed(Fl_Widget* w, void* data)
@@ -687,7 +686,7 @@ void ButPressed(Fl_Widget* w, void* data)
 
 	if (moves != 0)
 	{
-		moves += 1;
+		moves ++;
 		for (short i = 0; i < levels[GData.level-1].rows; i++)
 		{
 			for (short j = 0; j < levels[GData.level-1].cols; j++)
@@ -702,6 +701,19 @@ void ButPressed(Fl_Widget* w, void* data)
 	else
 	{
 		moves++;
+		
+
+		const GameLevel level = levels[game_level - 1];
+
+		short rows = level.rows;
+		short cols = level.cols;
+		short mines_count = level.mines_count;
+
+		char** field = new char* [rows];
+		bool** opened = new bool* [rows];
+
+		initialize_field(field, opened, rows, cols);
+
 		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count, GData.ButAr[0][0]);
 		calculate_numbers(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols);
 		for (short i = 0; i < levels[GData.level - 1].rows; i++)
@@ -1022,13 +1034,69 @@ void redraw()
 				}
 				else
 				{
-					GData.ButAr[i][j]->label("X");
+					if (GData.field[i][j] == '1')
+					{
+						GData.ButAr[i][j]->label("1");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(89, 194, 255));
+					}
+					else if (GData.field[i][j] == '2')
+					{
+						GData.ButAr[i][j]->label("2");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(64, 105, 255));
+					}
+					else if (GData.field[i][j] == '3')
+					{
+						GData.ButAr[i][j]->label("3");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(82, 255, 119));
+					}
+					else if (GData.field[i][j] == '4')
+					{
+						GData.ButAr[i][j]->label("4");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(251, 38, 255));
+					}
+					else if (GData.field[i][j] == '5')
+					{
+						GData.ButAr[i][j]->label("5");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(177, 10, 255));
+					}
+					else if (GData.field[i][j] == '6')
+					{
+						GData.ButAr[i][j]->label("6");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(255, 195, 43));
+					}
+					else if (GData.field[i][j] == '7')
+					{
+						GData.ButAr[i][j]->label("7");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(255, 66, 66));
+					}
+					else if (GData.field[i][j] == '8')
+					{
+						GData.ButAr[i][j]->label("8");
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(255, 0, 0));
+					}
+					else
+					{
+						GData.ButAr[i][j]->label("X");
+					}
 				}
 				GData.ButAr[i][j]->redraw();
 			}
 		}
 	}
 	GData.win->redraw();
+}
+
+void again(Fl_Widget* w, void* data)
+{
+	moves = 0;
+
+	for (short i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		for (short j = 0; j < levels[GData.level - 1].cols; j++)
+		{
+			GData.ButAr[i][j]->reset_state();
+		}
+	}
 }
 
 
