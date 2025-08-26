@@ -409,6 +409,10 @@ struct GameData
 	Fl_Double_Window* win;
 	short curX;
 	short curY;
+
+	Fl_Group* gl1;
+	Fl_Group* gl2;
+	Fl_Group* gl3;
 };
 
 const GameLevel levels[] =
@@ -455,6 +459,7 @@ void again(Fl_Widget* w, void* data);
 void redraw();
 
 short moves = 0;
+bool loose = false;
 
 int main(int argc, char** argv)
 {
@@ -553,6 +558,27 @@ int main(int argc, char** argv)
 		y += 58;
 	}
 
+	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
+
+	Fl_Box bckgr(10, 213, 580, 174);
+	bckgr.color(fl_rgb_color(192, 192, 192));
+	bckgr.box(FL_FLAT_BOX);
+
+	Fl_Box tgr(10, 220, 580, 159);
+	tgr.color(fl_rgb_color(169, 169, 169));
+	tgr.box(FL_FLAT_BOX);
+
+	Fl_Box tgrText1(30, 254, 539, 58, "Открыта мина");
+	tgrText1.labelcolor(fl_rgb_color(113, 0, 0));
+	tgrText1.labelsize(48);
+
+	Fl_Box tgrText2(30, 330, 539, 58, "Проигрыш");
+	tgrText2.labelsize(24);
+
+	lScreen1->hide();
+	lScreen1->end();
+	GData.gl1 = lScreen1;
+
 	leaveLvl.callback(toGameMenu, &win);
 	againLvl.callback(again, nullptr);
 
@@ -570,7 +596,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 	menuBut* self = (menuBut*)w;
 	self->reset_state();
 
-	game_level = 0; moves = 0;
+	game_level = 0; moves = 0; loose = false;
 
 	if (win->child(0)->visible())
 	{
@@ -996,6 +1022,7 @@ bool open(short i, short j)
 	else if (GData.field[i][j] == '*')
 	{
 		GData.opened[i][j] = true;
+		loose = true;
 		redraw();
 	}
 	else
@@ -1004,6 +1031,10 @@ bool open(short i, short j)
 		redraw();
 	}
 
+	if (loose == true)
+	{
+		GData.gl1->show();
+	}
 	return 1;
 }
 
@@ -1030,27 +1061,27 @@ void redraw()
 					if (GData.field[i][j] == '1')
 					{
 						GData.ButAr[i][j]->label("1");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(89, 194, 255));
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(27, 23, 255));
 					}
 					else if (GData.field[i][j] == '2')
 					{
 						GData.ButAr[i][j]->label("2");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(64, 105, 255));
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(27, 158, 49));
 					}
 					else if (GData.field[i][j] == '3')
 					{
 						GData.ButAr[i][j]->label("3");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(82, 255, 119));
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(156, 76, 30));
 					}
 					else if (GData.field[i][j] == '4')
 					{
 						GData.ButAr[i][j]->label("4");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(251, 38, 255));
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(191, 11, 11));
 					}
 					else if (GData.field[i][j] == '5')
 					{
 						GData.ButAr[i][j]->label("5");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(177, 10, 255));
+						GData.ButAr[i][j]->labelcolor(fl_rgb_color(219, 2, 132));
 					}
 					else if (GData.field[i][j] == '6')
 					{
@@ -1081,7 +1112,8 @@ void redraw()
 
 void again(Fl_Widget* w, void* data)
 {
-	moves = 0;
+	moves = 0; loose = false;
+	GData.gl1->hide();
 
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
