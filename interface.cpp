@@ -395,6 +395,7 @@ struct GameData
 	char** field;
 	PGBut* pedBut;
 	bool** opened;
+	Fl_Double_Window* win;
 };
 
 const GameLevel levels[] =
@@ -413,7 +414,7 @@ GameData GData;
 void initialize_field(char** field, bool** opened, int rows, int cols);
 void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr);
 void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
-void open(short i, short j);
+bool open(short i, short j);
 bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 void calculate_numbers(char** field, int rows, int cols);
@@ -435,6 +436,7 @@ void toGameSettings(Fl_Widget* w, void* data);
 void choose_level(Fl_Widget* w, void* data);
 void Game(Fl_Widget* w, void* data);
 void ButPressed(Fl_Widget* w, void* data);
+void redraw();
 
 short moves = 0;
 
@@ -449,9 +451,10 @@ int main(int argc, char** argv)
 
 	
 
-	HideConsole();
+	ShowConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
+	GData.win = &win;
 
 	win.color(fl_rgb_color(192, 192, 192));
 
@@ -699,7 +702,8 @@ void ButPressed(Fl_Widget* w, void* data)
 	else
 	{
 		moves++;
-		place_mines(GData.field, levels[GData.level-1].rows, levels[GData.level-1].cols, levels[GData.level-1].mines_count, GData.ButAr[0][0]);
+		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count, GData.ButAr[0][0]);
+		calculate_numbers(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols);
 		for (short i = 0; i < levels[GData.level - 1].rows; i++)
 		{
 			for (short j = 0; j < levels[GData.level - 1].cols; j++)
@@ -707,7 +711,6 @@ void ButPressed(Fl_Widget* w, void* data)
 				if (GData.ButAr[i][j] == GData.pedBut)
 				{
 					open(i, j);
-					calculate_numbers(GData.field, levels[GData.level].rows, levels[GData.level].cols);
 				}
 			}
 		}
@@ -875,6 +878,11 @@ void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButA
 		int x = rand() % rows;
 		int y = rand() % cols;
 
+		if (GData.ButAr[x][y] == GData.pedBut)
+		{
+			continue;
+		}
+
 		if (_field[x][y] != '*')
 		{
 			_field[x][y] = '*';
@@ -936,20 +944,6 @@ bool inbounds(int row, int col, int rows, int cols)
 	return row >= 0 && row < rows && col >= 0 && col < cols;
 }
 
-void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
-{
-	if (!inbounds(_row, _col, rows, cols)) return;
-	if (_opened[_row][_col]) return;
-
-	_opened[_row][_col] = true;
-	if (_field[_row][_col] != '0') return;
-
-	for (int k = 0; k < 8; k++)
-	{
-		open_empty(_field, _opened, rows, cols, _row + dx[k], _col + dy[k]);
-	}
-}
-
 void calculate_numbers(char** field, int rows, int cols)
 {
 	for (int i = 0; i < rows; i++)
@@ -972,21 +966,69 @@ void calculate_numbers(char** field, int rows, int cols)
 	}
 }
 
-void open(short i, short j)
+void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col)
+{
+	if (!inbounds(_row, _col, rows, cols)) return;
+	if (_opened[_row][_col]) return;
+
+	_opened[_row][_col] = true;
+	if (_field[_row][_col] != '0') return;
+
+	for (int k = 0; k < 8; k++)
+	{
+		open_empty(_field, _opened, rows, cols, _row + dx[k], _col + dy[k]);
+	}
+	
+}
+
+bool open(short i, short j)
 {
 	if (GData.field[i][j] == '0')
 	{
-		GData.pedBut->box(FL_DOWN_BOX);
-		open_empty(GData.field, GData.opened, levels[GData.level-1].rows, levels[GData.level-1].cols, i, j);
+		open_empty(GData.field, GData.opened, levels[GData.level-1].rows, levels[GData.level - 1].cols, i, j);
+		redraw();
 	}
 	else if (GData.field[i][j] == '*')
 	{
-		GData.pedBut->box(FL_DOWN_BOX);
-		GData.pedBut->label("*");
+		GData.opened[i][j] = true;
+		redraw();
 	}
 	else
 	{
 		GData.opened[i][j] = true;
+		redraw();
 	}
-	GData.opened[i][j] = true;
+
+	return 1;
 }
+
+void redraw()
+{
+	for (short i = 0; i < levels[GData.level-1].rows; i++)
+	{
+		for (short j = 0; j < levels[GData.level-1].cols; j++)
+		{
+			if (GData.opened[i][j] == true)
+			{
+				if(GData.field[i][j] == '0')
+				{
+					GData.ButAr[i][j]->box(FL_DOWN_BOX);
+				}
+				else if (GData.field[i][j] == '*')
+				{
+					GData.ButAr[i][j]->box(FL_DOWN_BOX);
+					GData.ButAr[i][j]->color(FL_RED);
+					GData.ButAr[i][j]->label("*");
+				}
+				else
+				{
+					GData.ButAr[i][j]->label("X");
+				}
+				GData.ButAr[i][j]->redraw();
+			}
+		}
+	}
+	GData.win->redraw();
+}
+
+
