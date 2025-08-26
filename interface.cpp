@@ -407,6 +407,8 @@ struct GameData
 	PGBut* pedBut;
 	bool** opened;
 	Fl_Double_Window* win;
+	short curX;
+	short curY;
 };
 
 const GameLevel levels[] =
@@ -429,6 +431,7 @@ bool open(short i, short j);
 bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 void calculate_numbers(char** field, int rows, int cols);
+void findXY();
 
 
 int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
@@ -464,7 +467,7 @@ int main(int argc, char** argv)
 
 	
 
-	ShowConsole();
+	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
 	GData.win = &win;
@@ -677,23 +680,30 @@ void Game(Fl_Widget* w, void* data)
 	}
 }
 
+void findXY()
+{
+	for (short i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		for (short j = 0; j < levels[GData.level - 1].cols; j++)
+		{
+			if (GData.ButAr[i][j] == GData.pedBut)
+			{
+				GData.curX = i;
+				GData.curY = j;
+			}
+		}
+	}
+}
+
 void ButPressed(Fl_Widget* w, void* data)
 {
 	GData.pedBut = (PGBut*)w;
 
+	findXY();
 	if (moves != 0)
 	{
 		moves ++;
-		for (short i = 0; i < levels[GData.level-1].rows; i++)
-		{
-			for (short j = 0; j < levels[GData.level-1].cols; j++)
-			{
-				if (GData.ButAr[i][j] == GData.pedBut)
-				{
-					open(i, j);
-				}
-			}
-		}
+		open(GData.curX, GData.curY);
 	}
 	else
 	{
@@ -702,16 +712,8 @@ void ButPressed(Fl_Widget* w, void* data)
 
 		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count, GData.ButAr[0][0]);
 		calculate_numbers(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols);
-		for (short i = 0; i < levels[GData.level - 1].rows; i++)
-		{
-			for (short j = 0; j < levels[GData.level - 1].cols; j++)
-			{
-				if (GData.ButAr[i][j] == GData.pedBut)
-				{
-					open(i, j);
-				}
-			}
-		}
+
+		open(GData.curX, GData.curY);
 	}
 }
 
@@ -881,7 +883,7 @@ void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButA
 		int x = rand() % rows;
 		int y = rand() % cols;
 
-		if (GData.ButAr[x][y] == GData.pedBut)
+		if (GData.ButAr[x][y] == GData.pedBut or abs(x - GData.curX) <= 1 and abs(y - GData.curY) <= 1)
 		{
 			continue;
 		}
