@@ -442,6 +442,7 @@ struct GameData
 	short curX;
 	short curY;
 	short zCount;
+	short GTime;
 
 	Fl_Group* gl1;
 	Fl_Group* gl2;
@@ -450,6 +451,8 @@ struct GameData
 	Fl_Group* gw1;
 	Fl_Group* gw2;
 	Fl_Group* gw3;
+
+	Fl_Box* t;
 };
 
 const GameLevel levels[] =
@@ -463,6 +466,7 @@ const GameLevel levels[] =
 
 int game_level = 0;
 GameData GData;
+string GTf;
 
 //функционал
 void initialize_field();
@@ -472,7 +476,8 @@ bool open(short i, short j);
 bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 void calculate_numbers(char** field, int rows, int cols);
-
+void timer(void* data);
+void dock(Fl_Widget* w, void* data);
 void findXY();
 
 
@@ -511,10 +516,10 @@ int main(int argc, char** argv)
 
 	
 
-	HideConsole();
+	ShowConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
-	GData.win = &win;
+	GData.win = &win; GData.GTime = 0;
 
 	win.color(fl_rgb_color(192, 192, 192));
 
@@ -573,7 +578,10 @@ int main(int argc, char** argv)
 	PGBut* ez[size][size];
 
 	BoxForBut et1(620, 37, 350, 60); 
-	Fl_Box cur_time(620, 37, 175, 60, "Время:"); 
+	Fl_Box cur_time(620, 37, 175, 60, "Время: 0");
+	GData.t = &cur_time;
+	cur_time.labelfont(FL_HELVETICA);
+	cur_time.labelsize(16);
 
 	Fl_Box cur_steps(795, 37, 175, 60, "Ходов:0");
 
@@ -640,8 +648,8 @@ int main(int argc, char** argv)
 	GData.gw1 = wScreen1;
 
 
-	leaveLvl.callback(toGameMenu, &win);
-	againLvl.callback(again, nullptr);
+	leaveLvl.callback(dock, &win);
+	againLvl.callback(dock, nullptr);
 
 	ez_g->end();
 	ez_g->hide();
@@ -658,8 +666,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 	self->reset_state();
 
 	//обновление переменных
-	game_level = 0; moves = 0; loose = false;
-	GData.gw1->hide();
+	game_level = 0;
 
 	if (win->child(0)->visible())
 	{
@@ -802,6 +809,7 @@ void ButPressed(Fl_Widget* w, void* data)
 
 		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count, GData.ButAr[0][0]);
 		calculate_numbers(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols);
+		Fl::add_timeout(1.0, timer, nullptr);
 
 		open(GData.curX, GData.curY);
 	}
@@ -1096,18 +1104,20 @@ bool open(short i, short j)
 		redraw();
 	}
 
-	if (loose == true)
-	{
-		GData.gl1->show();
-		showField();
-	}
-
 	winOrFail();
 	return 1;
 }
 
 void winOrFail()
 {
+	if (loose == true)
+	{
+		GData.gl1->show();
+		showField();
+		Fl::remove_timeout(timer);
+		return;
+	}
+
 	short count = 0;
 	for (int i = 0; i < levels[GData.level - 1].rows; i++)
 	{
@@ -1123,6 +1133,7 @@ void winOrFail()
 	if (count >= levels[GData.level - 1].mines_count)
 	{
 		GData.gw1->show();
+		Fl::remove_timeout(timer);
 	}
 }
 
@@ -1139,6 +1150,7 @@ void showField()
 	redraw();
 }
 
+//тут подключаются читы
 void redraw()
 {
 	for (short i = 0; i < levels[GData.level-1].rows; i++)
@@ -1215,11 +1227,6 @@ void redraw()
 
 void again(Fl_Widget* w, void* data)
 {
-	//обновление переменных
-	moves = 0; loose = false;
-	GData.gl1->hide();
-	GData.gw1->hide();
-
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
@@ -1229,4 +1236,34 @@ void again(Fl_Widget* w, void* data)
 	}
 }
 
+void timer(void* data)
+{
+	GData.GTime++;
 
+	GTf = "Время: " + to_string(GData.GTime);
+	GData.t->label(GTf.c_str());
+
+	Fl::repeat_timeout(1.0, timer, nullptr);
+}
+
+//функция, распределяющая кнопки(нужна, чтобы удобно обновлять переменные между играми)
+void dock(Fl_Widget* w, void* data)
+{
+	moves = 0; loose = false;
+	GData.gl1->hide();
+	GData.gw1->hide();
+	Fl::remove_timeout(timer);
+	GTf = "Время: 0";
+	GData.t->redraw();
+	GData.GTime = 0;
+
+	if (w == nullptr) return;
+	if (strcmp(w->label(), "Заново") == 0)
+	{
+		again(w, nullptr);
+	}
+	else if ((strcmp(w->label(), "В меню") == 0))
+	{
+		toGameMenu(w, GData.win);
+	}
+}
