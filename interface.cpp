@@ -382,6 +382,17 @@ public:
 		labelsize(25);
 	}
 	
+	/*int handle(int event)
+	{
+		switch (event)
+		{
+		case FL_PUSH:
+		{
+			
+		}break;
+		}
+	}*/
+
 	void reset_state()
 	{
 		color(fl_rgb_color(233, 240, 234));
@@ -456,6 +467,7 @@ void choose_level(Fl_Widget* w, void* data);
 void Game(Fl_Widget* w, void* data);
 void ButPressed(Fl_Widget* w, void* data);
 void again(Fl_Widget* w, void* data);
+void showField();
 void redraw();
 
 short moves = 0;
@@ -1022,6 +1034,7 @@ bool open(short i, short j)
 	else if (GData.field[i][j] == '*')
 	{
 		GData.opened[i][j] = true;
+		GData.ButAr[i][j]->color(FL_RED);
 		loose = true;
 		redraw();
 	}
@@ -1034,8 +1047,22 @@ bool open(short i, short j)
 	if (loose == true)
 	{
 		GData.gl1->show();
+		showField();
 	}
 	return 1;
+}
+
+void showField()
+{
+	for (short i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		for (short j = 0; j < levels[GData.level - 1].cols; j++)
+		{
+			if (GData.curX == i and GData.curY == j) continue;
+			GData.opened[i][j] = true;
+		}
+	}
+	redraw();
 }
 
 void redraw()
@@ -1049,11 +1076,11 @@ void redraw()
 				if(GData.field[i][j] == '0')
 				{
 					GData.ButAr[i][j]->box(FL_DOWN_BOX);
+					GData.ButAr[i][j]->color(fl_rgb_color(186, 186, 186));
 				}
 				else if (GData.field[i][j] == '*')
 				{
 					GData.ButAr[i][j]->box(FL_DOWN_BOX);
-					GData.ButAr[i][j]->color(FL_RED);
 					GData.ButAr[i][j]->label("*");
 				}
 				else
