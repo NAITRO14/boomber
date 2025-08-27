@@ -369,6 +369,9 @@ public:
 
 };
 
+
+void winOrFail();
+
 class PGBut : public Fl_Button
 {
 public:
@@ -382,16 +385,34 @@ public:
 		labelsize(25);
 	}
 	
-	/*int handle(int event)
+	int handle(int event)
 	{
 		switch (event)
 		{
 		case FL_PUSH:
 		{
-			
+			if (Fl::event_button() == 3)
+			{
+				if (box() != FL_DOWN_BOX)
+				{
+					if (color() == fl_rgb_color(97, 255, 94))
+					{
+						color(fl_rgb_color(233, 240, 234));
+					}
+					else
+					{
+						color(fl_rgb_color(97, 255, 94));
+					}
+					
+					
+				}
+				winOrFail();
+			}
 		}break;
 		}
-	}*/
+
+		return Fl_Button::handle(event);
+	}
 
 	void reset_state()
 	{
@@ -412,18 +433,23 @@ struct GameLevel
 };
 struct GameData
 {
-	short level;
 	PGBut* ButAr[20][25];
-	char** field;
-	PGBut* pedBut;
-	bool** opened;
 	Fl_Double_Window* win;
+	PGBut* pedBut;
+	short level;
+	char** field;
+	bool** opened;
 	short curX;
 	short curY;
+	short zCount;
 
 	Fl_Group* gl1;
 	Fl_Group* gl2;
 	Fl_Group* gl3;
+
+	Fl_Group* gw1;
+	Fl_Group* gw2;
+	Fl_Group* gw3;
 };
 
 const GameLevel levels[] =
@@ -446,6 +472,7 @@ bool open(short i, short j);
 bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 void calculate_numbers(char** field, int rows, int cols);
+
 void findXY();
 
 
@@ -570,26 +597,48 @@ int main(int argc, char** argv)
 		y += 58;
 	}
 
+	//экран поражения
 	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
 
-	Fl_Box bckgr(10, 213, 580, 174);
-	bckgr.color(fl_rgb_color(192, 192, 192));
-	bckgr.box(FL_FLAT_BOX);
+	Fl_Box bckgrL1(10, 213, 580, 174);
+	bckgrL1.color(fl_rgb_color(192, 192, 192));
+	bckgrL1.box(FL_FLAT_BOX);
 
-	Fl_Box tgr(10, 220, 580, 159);
-	tgr.color(fl_rgb_color(169, 169, 169));
-	tgr.box(FL_FLAT_BOX);
+	Fl_Box tgrL1(10, 220, 580, 159);
+	tgrL1.color(fl_rgb_color(169, 169, 169));
+	tgrL1.box(FL_FLAT_BOX);
 
-	Fl_Box tgrText1(30, 254, 539, 58, "Открыта мина");
-	tgrText1.labelcolor(fl_rgb_color(113, 0, 0));
-	tgrText1.labelsize(48);
+	Fl_Box tgrTextL1(30, 254, 539, 58, "Открыта мина");
+	tgrTextL1.labelcolor(fl_rgb_color(113, 0, 0));
+	tgrTextL1.labelsize(48);
 
-	Fl_Box tgrText2(30, 330, 539, 58, "Проигрыш");
-	tgrText2.labelsize(24);
+	Fl_Box tgrTextL2(30, 330, 539, 58, "Проигрыш");
+	tgrTextL2.labelsize(24);
 
 	lScreen1->hide();
 	lScreen1->end();
 	GData.gl1 = lScreen1;
+
+
+	//экран победы
+	Fl_Group* wScreen1 = new Fl_Group(10, 10, 580, 580);
+
+	Fl_Box bckgrW1(10, 213, 580, 174);
+	bckgrW1.color(fl_rgb_color(192, 192, 192));
+	bckgrW1.box(FL_FLAT_BOX);
+
+	Fl_Box tgrW1(10, 220, 580, 159);
+	tgrW1.color(fl_rgb_color(169, 169, 169));
+	tgrW1.box(FL_FLAT_BOX);
+
+	Fl_Box tgrTextW1(30, 254, 539, 58, "Все мины найдены");
+	tgrTextW1.labelcolor(fl_rgb_color(21, 133, 4));
+	tgrTextW1.labelsize(48);
+
+	wScreen1->hide();
+	wScreen1->end();
+	GData.gw1 = wScreen1;
+
 
 	leaveLvl.callback(toGameMenu, &win);
 	againLvl.callback(again, nullptr);
@@ -608,7 +657,9 @@ void toGameMenu(Fl_Widget* w, void* data)
 	menuBut* self = (menuBut*)w;
 	self->reset_state();
 
+	//обновление переменных
 	game_level = 0; moves = 0; loose = false;
+	GData.gw1->hide();
 
 	if (win->child(0)->visible())
 	{
@@ -735,6 +786,7 @@ void findXY()
 
 void ButPressed(Fl_Widget* w, void* data)
 {
+	if (Fl::event_button() != 1) return;
 	GData.pedBut = (PGBut*)w;
 
 	findXY();
@@ -1049,7 +1101,29 @@ bool open(short i, short j)
 		GData.gl1->show();
 		showField();
 	}
+
+	winOrFail();
 	return 1;
+}
+
+void winOrFail()
+{
+	short count = 0;
+	for (int i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		for (int j = 0; j < levels[GData.level - 1].cols; j++)
+		{
+			if (GData.ButAr[i][j]->color() == fl_rgb_color(97, 255, 94) and GData.field[i][j] == '*')
+			{
+				count++;
+			}
+		}
+	}
+
+	if (count >= levels[GData.level - 1].mines_count)
+	{
+		GData.gw1->show();
+	}
 }
 
 void showField()
@@ -1071,6 +1145,8 @@ void redraw()
 	{
 		for (short j = 0; j < levels[GData.level-1].cols; j++)
 		{
+			if (GData.field[i][j] == '*') GData.ButAr[i][j]->label("*");
+
 			if (GData.opened[i][j] == true)
 			{
 				if(GData.field[i][j] == '0')
@@ -1139,8 +1215,10 @@ void redraw()
 
 void again(Fl_Widget* w, void* data)
 {
+	//обновление переменных
 	moves = 0; loose = false;
 	GData.gl1->hide();
+	GData.gw1->hide();
 
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
