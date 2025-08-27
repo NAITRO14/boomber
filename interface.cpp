@@ -761,11 +761,11 @@ void Game(Fl_Widget* w, void* data)
 	}
 	else if (game_level == 2)
 	{
-		
+		win->child(2)->show();
 	}
 	else if (game_level == 3)
 	{
-		
+		win->child(2)->show();
 	}
 }
 
