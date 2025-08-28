@@ -453,6 +453,7 @@ struct GameData
 	Fl_Group* gw3;
 
 	Fl_Box* t;
+	Fl_Box* m;
 };
 
 const GameLevel levels[] =
@@ -466,7 +467,7 @@ const GameLevel levels[] =
 
 int game_level = 0;
 GameData GData;
-string GTf;
+string GTf, GMf;
 
 //функционал
 void initialize_field();
@@ -580,10 +581,9 @@ int main(int argc, char** argv)
 	BoxForBut et1(620, 37, 350, 60); 
 	Fl_Box cur_time(620, 37, 175, 60, "Время: 0");
 	GData.t = &cur_time;
-	cur_time.labelfont(FL_HELVETICA);
-	cur_time.labelsize(16);
 
-	Fl_Box cur_steps(795, 37, 175, 60, "Ходов:0");
+	Fl_Box cur_steps(795, 37, 175, 60, "Ходов: 0");
+	GData.m = &cur_steps;
 
 	BoxForBut et2(620, 131, 350, 246);
 
@@ -799,8 +799,11 @@ void ButPressed(Fl_Widget* w, void* data)
 	findXY();
 	if (moves != 0)
 	{
-		moves ++;
-		open(GData.curX, GData.curY);
+		if (GData.opened[GData.curX][GData.curY] == false)
+		{
+			moves++;
+			open(GData.curX, GData.curY);
+		}
 	}
 	else
 	{
@@ -813,6 +816,8 @@ void ButPressed(Fl_Widget* w, void* data)
 
 		open(GData.curX, GData.curY);
 	}
+	GMf = "Ходов: " + to_string(moves);
+	GData.m->label(GMf.c_str());
 }
 
 
@@ -1157,7 +1162,7 @@ void redraw()
 	{
 		for (short j = 0; j < levels[GData.level-1].cols; j++)
 		{
-			if (GData.field[i][j] == '*') GData.ButAr[i][j]->label("*");
+			/*if (GData.field[i][j] == '*') GData.ButAr[i][j]->label("*");*/
 
 			if (GData.opened[i][j] == true)
 			{
@@ -1249,14 +1254,23 @@ void timer(void* data)
 //функция, распределяющая кнопки(нужна, чтобы удобно обновлять переменные между играми)
 void dock(Fl_Widget* w, void* data)
 {
+	//сбросить переменные
 	moves = 0; loose = false;
+	GData.GTime = 0;
+
+	//спрятать окна
 	GData.gl1->hide();
 	GData.gw1->hide();
+
+	//обновить время
 	Fl::remove_timeout(timer);
 	GTf = "Время: 0";
 	GData.t->redraw();
-	GData.GTime = 0;
 
+	//обновить ходы
+	GData.m->label("Ходов: 0");
+
+	//В другие функции
 	if (w == nullptr) return;
 	if (strcmp(w->label(), "Заново") == 0)
 	{
