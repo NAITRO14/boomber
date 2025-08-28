@@ -517,7 +517,7 @@ int main(int argc, char** argv)
 
 	
 
-	ShowConsole();
+	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
 	GData.win = &win; GData.GTime = 0;
