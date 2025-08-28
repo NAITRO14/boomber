@@ -58,8 +58,8 @@ int main() {
 
 
     //обявление переменных для игры  
-    int choose, choose_menu;
-    bool login_acces;
+    int choose, choose_menu, acces = 1;
+    bool login_acces = false;
     short record;
     char res = 0;
     int rows;
@@ -76,9 +76,10 @@ int main() {
             // добавил авторизацию
             system("cls");
             cout << "\n==== Авторизация ====" << endl;
-            cout << "1. Регистрация\n2. Вход\n3. Выход\n";
+            cout << "1. Регистрация\n2. Вход\n3. Выход\n4. Играть без аккаунта\n";
             cout << "Выберите действие: ";
             cin >> choose;
+            if (choose == 4) choose = 2; acces = 0;
             system("cls");
             switch (choose)
             {
@@ -90,12 +91,16 @@ int main() {
             case 2:
             {
                 string username, password;
-                cout << "\n=== Вход ===" << endl;
-                cout << "Логин: ";
-                cin >> username;
-                cout << "Пароль: ";
-                cin >> password;
-                login_acces = loginUser(username, password);
+                if (acces == 1)
+                {                  
+                    cout << "\n=== Вход ===" << endl;
+                    cout << "Логин: ";
+                    cin >> username;
+                    cout << "Пароль: ";
+                    cin >> password;
+                    login_acces = loginUser(username, password);
+                }
+                if (acces == 0) login_acces = true;
                 if (login_acces == false) res = 'y';
                 if (login_acces == true)
                 {
@@ -103,8 +108,21 @@ int main() {
                     while (true)
                     {
                         cout << "\n==== Главное меню ====" << endl;
-                        cout << "Выберите действие:\n1. Начать игру\n2. Посмотреть профиль\n3. Выход из программы и аккаунта\n4. Выход из аккаунта\n\n  Ответ: ";
+                        cout << "Выберите действие:\n1. Начать игру";
+                        if (acces == 1)
+                        {
+                            cout << "\n2. Посмотреть профиль";                           
+                        }
+                        cout << "\n3. Выход из программы\n";
+                        if (acces == 1)
+                        {
+                            cout << "4.Выход из аккаунта\n";
+                        }
+                        cout << "\n  Ответ : ";
+
                         cin >> choose_menu;
+                        if (acces == 0 and choose_menu == 2) continue;
+                        if (acces == 0 and choose_menu == 4) continue;                       
                         system("cls");
                         switch (choose_menu)
                         {
@@ -298,7 +316,7 @@ int main() {
                                 }
                             }
                             login.close();
-                        } break;  
+                        } break;     
                         case 3: break;
                         case 4:
                         {
@@ -315,13 +333,13 @@ int main() {
             {
                 cout << "До свидания!" << endl;
 
-            } break;
+            } break;                      
             default:
             {
                 cout << "Неверный выбор. Попробуйте снова." << endl;
-                system("pause"); 
-                continue;
+                system("pause");                 
                 res = 'y';
+                continue;
             } break;           
             }
             system("cls");
@@ -684,3 +702,4 @@ bool loginUser(string username, string password)
         system("pause");
         return false;
     }
+}
