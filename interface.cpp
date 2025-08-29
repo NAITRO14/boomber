@@ -370,6 +370,17 @@ public:
 
 };
 
+class ChangedT : public Fl_Box
+{
+public:
+	ChangedT(int X, int Y, int W, int H, const char* L = 0)
+		:Fl_Box(X, Y, W, H, L)
+	{
+		labelsize(24);
+		align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+	}
+};
+
 
 void winOrFail();
 
@@ -445,8 +456,8 @@ struct GameData
 	short zCount;
 	short GTime;
 
-	Fl_Box* t;
-	Fl_Box* m;
+	ChangedT* t;
+	ChangedT* m;
 };
 struct menu
 {
@@ -485,8 +496,9 @@ menu menues;
 //окошко с информацией
 string GTf, GMf;
 string found; string left; string complT;
-Fl_Box* foundB; Fl_Box* leftB;
-Fl_Box* complexity;
+
+ChangedT* foundB; ChangedT* leftB;
+ChangedT* complexity;
 
 //функционал
 void initialize_field();
@@ -598,10 +610,11 @@ int main(int argc, char** argv)
 	short x, y;
 	const short size = 10;
 	BoxForBut et1(620, 37, 350, 60); 
-	Fl_Box cur_time(620, 37, 175, 60, "Время: 0");
+
+	ChangedT cur_time(650, 37, 175, 60, "Время: 0");
 	GData.t = &cur_time;
 
-	Fl_Box cur_steps(795, 37, 175, 60, "Ходов: 0");
+	ChangedT cur_steps(830, 37, 175, 60, "Ходов: 0");
 	GData.m = &cur_steps;
 
 	BoxForBut et2(620, 131, 350, 246);
@@ -1287,18 +1300,15 @@ void drowField()
 
 	if (game_level == 1)
 	{
-		foundB = new Fl_Box(635, 190, 211, 29, "Мин найдено: 00");
-		foundB->labelsize(24);
-		foundB->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 00");
 		menues.easy->add(foundB);
 
-		leftB = new Fl_Box(635, 219, 211, 29, "Мин осталось: 00");
-		leftB->labelsize(24);
-		leftB->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 00");
+
 		menues.easy->add(leftB);
 
-		complexity = new Fl_Box(670, 141, 240, 29, "Сложность: легкая");
-		complexity->labelsize(24);
+		complexity = new ChangedT(670, 141, 240, 29, "Сложность: легкая");
+		complexity->align(FL_ALIGN_INSIDE);
 		menues.easy->add(complexity);
 	}
 }
