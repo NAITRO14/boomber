@@ -455,6 +455,13 @@ struct GameData
 	Fl_Box* t;
 	Fl_Box* m;
 };
+struct menu
+{
+	Fl_Group* hello;
+	Fl_Group* main;
+	Fl_Group* settings;
+	Fl_Group* easy;
+};
 
 const GameLevel levels[] =
 {
@@ -467,6 +474,7 @@ const GameLevel levels[] =
 
 int game_level = 0;
 GameData GData;
+menu menues;
 string GTf, GMf;
 
 //функционал
@@ -529,6 +537,7 @@ int main(int argc, char** argv)
 	menuBut begin(435.5, 250, 125, 60, "Начать");
 	begin.callback(toGameMenu, helloWin->parent());
 	helloWin->end();
+	menues.hello = helloWin;
 
 	//группа игрового меню (1)
 	Fl_Group* mainMenu = new Fl_Group(0, 0, 1000, 600);
@@ -546,6 +555,7 @@ int main(int argc, char** argv)
 	exit.callback(exitf, nullptr);
 	mainMenu->hide();
 	mainMenu->end();
+	menues.main = mainMenu;
 
 	//Группа настройки игры(2)
 	Fl_Group* game_settings = new Fl_Group(0, 0, 1000, 600);
@@ -561,8 +571,6 @@ int main(int argc, char** argv)
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
 
-	
-
 	play.callback(Game, &win);
 	back.callback(toGameMenu, &win);
 	easy.callback(choose_level, &win);
@@ -570,6 +578,7 @@ int main(int argc, char** argv)
 	hard.callback(choose_level, &win);
 	game_settings->end();
 	game_settings->hide();
+	menues.settings = game_settings;
 
 	//группа легкой сложности (3)
 	
@@ -654,6 +663,7 @@ int main(int argc, char** argv)
 	ez_g->end();
 	ez_g->hide();
 
+	menues.easy = ez_g;
 	win.end();
 	win.show(argc, argv);
 	return Fl::run();
@@ -670,19 +680,19 @@ void toGameMenu(Fl_Widget* w, void* data)
 
 	if (win->child(0)->visible())
 	{
-		win->child(0)->hide();
-		win->child(1)->show();
+		menues.hello->hide();
+		menues.main->show();
 	}
 	else if (win->child(2)->visible())
 	{
-		win->child(2)->hide();
-		win->child(1)->show();
+		menues.settings->hide();
+		menues.main->show();
 		choose_level(w, data);
 	}
 	else if (win->child(3)->visible())
 	{
-		win->child(3)->hide();
-		win->child(1)->show();
+		menues.easy->hide();
+		menues.main->show();
 		again(nullptr, nullptr);
 		choose_level(w, data);
 	}
@@ -696,28 +706,26 @@ void exitf(Fl_Widget* w, void* data)
 void toGameSettings(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
-	Fl_Group* group = (Fl_Group*)win->child(2);
 	TogButton* TogBut = NULL;
 	menuBut* self = (menuBut*)w;
 	self->reset_state();
 
 	for (short i = 0; i < 3; i++)
 	{
-		TogBut = (TogButton*)group->child(i);
+		TogBut = (TogButton*)menues.settings->child(i);
 		TogBut->reset_state();
 	}
-	win->child(1)->hide();
-	win->child(2)->show();
+	menues.main->hide();
+	menues.settings->show();
 }
 
 void choose_level(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
-	Fl_Group* group = (Fl_Group*)win->child(2);
 
 	for (short i = 0; i < 3; i++)
 	{
-		group->child(i)->color(fl_rgb_color(169, 169, 169));
+		menues.settings->child(i)->color(fl_rgb_color(169, 169, 169));
 	}
 
 	if (w->label() == "Легко")
@@ -753,26 +761,26 @@ void choose_level(Fl_Widget* w, void* data)
 void Game(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
-	win->child(2)->hide();
+	menues.settings->hide();
 	PlayBut* self = (PlayBut*)w;
 	self->icreasing = false;
 	self->reset_state();
 
 	if (game_level == 0)
 	{
-		win->child(2)->show();
+		menues.settings->show();
 	}
 	else if (game_level == 1)
 	{
-		win->child(3)->show();
+		menues.easy->show();
 	}
 	else if (game_level == 2)
 	{
-		win->child(2)->show();
+		menues.settings->show();
 	}
 	else if (game_level == 3)
 	{
-		win->child(2)->show();
+		menues.settings->show();
 	}
 }
 
