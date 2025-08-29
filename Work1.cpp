@@ -71,7 +71,7 @@ int main() {
     bool normal_exit;
 
     do {
-        if (res != 'q' || res != 'q')
+        if (res != 'q' && res != 'Q')
         {
             // добавил авторизацию
             system("cls");
@@ -79,7 +79,7 @@ int main() {
             cout << "1. Регистрация\n2. Вход\n3. Выход\n4. Играть без аккаунта\n";
             cout << "Выберите действие: ";
             cin >> choose;
-            if (choose == 4) choose = 2; acces = 0;
+            if (choose == 4) { choose = 2; acces = 0; }
             system("cls");
             switch (choose)
             {
@@ -116,7 +116,7 @@ int main() {
                         cout << "\n3. Выход из программы\n";
                         if (acces == 1)
                         {
-                            cout << "4.Выход из аккаунта\n";
+                            cout << "4. Выход из аккаунта\n";
                         }
                         cout << "\n  Ответ : ";
 
@@ -264,7 +264,7 @@ int main() {
                             delete[] field;
                             delete[] opened;
 
-                            if (res != 'n' || res != 'N')
+                            if (res != 'n' && res != 'N')
                             {
                                 cout << "Хотите сыграть еще раз? (Если да нажмите - y / если нет - n): ";
                                 cin >> res;
