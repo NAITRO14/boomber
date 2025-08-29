@@ -472,6 +472,8 @@ const GameLevel levels[] =
 
 //глобальные переменные для игры
 
+PGBut*** BField;
+
 int game_level = 0;
 GameData GData;
 menu menues;
@@ -508,6 +510,7 @@ void choose_level(Fl_Widget* w, void* data);
 void Game(Fl_Widget* w, void* data);
 void ButPressed(Fl_Widget* w, void* data);
 void again(Fl_Widget* w, void* data);
+void drowField();
 void showField();
 void redraw();
 
@@ -585,7 +588,6 @@ int main(int argc, char** argv)
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
 	short x, y;
 	const short size = 10;
-	PGBut* ez[size][size];
 
 	BoxForBut et1(620, 37, 350, 60); 
 	Fl_Box cur_time(620, 37, 175, 60, "Время: 0");
@@ -598,21 +600,6 @@ int main(int argc, char** argv)
 
 	menuBut leaveLvl(606, 510, 169, 63, "В меню");
 	menuBut againLvl(814, 510, 169, 63, "Заново");
-
-	//игровое поле
-	y = 10;
-	for(short i = 0; i < size; i++)
-	{
-		x = 10;
-		for (short j = 0; j < size; j++)
-		{
-			ez[i][j] = new PGBut(x, y, 58, 58);
-			GData.ButAr[i][j] = ez[i][j];
-			ez[i][j]->callback(ButPressed, ez);
-			x += 58;
-		}
-		y += 58;
-	}
 
 	//экран поражения
 	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
@@ -766,6 +753,8 @@ void Game(Fl_Widget* w, void* data)
 	self->icreasing = false;
 	self->reset_state();
 
+	drowField();
+
 	if (game_level == 0)
 	{
 		menues.settings->show();
@@ -827,7 +816,6 @@ void ButPressed(Fl_Widget* w, void* data)
 	GMf = "Ходов: " + to_string(moves);
 	GData.m->label(GMf.c_str());
 }
-
 
 void ShowSign(void* data)
 {
@@ -1246,6 +1234,44 @@ void again(Fl_Widget* w, void* data)
 		{
 			GData.ButAr[i][j]->reset_state();
 		}
+	}
+}
+
+void drowField()
+{
+	if (BField)
+	{
+		for (short i = 0; i < levels[GData.level - 1].rows; i++)
+		{
+			for (short j = 0; j < levels[GData.level - 1].cols; j++)
+			{
+				delete BField[i][j];
+			}
+			delete[] BField[i];
+		}
+		delete[] BField;
+	}
+
+	short x, y;
+	BField = new PGBut **[25];
+	for (short i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		BField[i] = new PGBut * [20];
+	}
+
+	y = 10;
+	for (short i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		x = 10;
+		for (short j = 0; j < levels[GData.level - 1].cols; j++)
+		{
+			BField[i][j] = new PGBut(x, y, 58, 58);
+			GData.ButAr[i][j] = BField[i][j];
+			BField[i][j]->callback(ButPressed, BField);
+			menues.easy->add(BField[i][j]);
+			x += 58;
+		}
+		y += 58;
 	}
 }
 
