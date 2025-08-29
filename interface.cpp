@@ -14,6 +14,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
 
+
 //звуки
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
@@ -444,14 +445,6 @@ struct GameData
 	short zCount;
 	short GTime;
 
-	Fl_Group* gl1;
-	Fl_Group* gl2;
-	Fl_Group* gl3;
-
-	Fl_Group* gw1;
-	Fl_Group* gw2;
-	Fl_Group* gw3;
-
 	Fl_Box* t;
 	Fl_Box* m;
 };
@@ -461,6 +454,16 @@ struct menu
 	Fl_Group* main;
 	Fl_Group* settings;
 	Fl_Group* easy;
+};
+struct screen
+{
+	Fl_Group* gl1;
+	Fl_Group* gl2;
+	Fl_Group* gl3;
+
+	Fl_Group* gw1;
+	Fl_Group* gw2;
+	Fl_Group* gw3;
 };
 
 const GameLevel levels[] =
@@ -476,8 +479,14 @@ PGBut*** BField;
 
 int game_level = 0;
 GameData GData;
+screen screens;
 menu menues;
+
+//окошко с информацией
 string GTf, GMf;
+string found; string left; string complT;
+Fl_Box* foundB; Fl_Box* leftB;
+Fl_Box* complexity;
 
 //функционал
 void initialize_field();
@@ -588,7 +597,6 @@ int main(int argc, char** argv)
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
 	short x, y;
 	const short size = 10;
-
 	BoxForBut et1(620, 37, 350, 60); 
 	Fl_Box cur_time(620, 37, 175, 60, "Время: 0");
 	GData.t = &cur_time;
@@ -621,7 +629,7 @@ int main(int argc, char** argv)
 
 	lScreen1->hide();
 	lScreen1->end();
-	GData.gl1 = lScreen1;
+	screens.gl1 = lScreen1;
 
 
 	//экран победы
@@ -641,7 +649,7 @@ int main(int argc, char** argv)
 
 	wScreen1->hide();
 	wScreen1->end();
-	GData.gw1 = wScreen1;
+	screens.gw1 = wScreen1;
 
 
 	leaveLvl.callback(dock, &win);
@@ -1113,7 +1121,7 @@ void winOrFail()
 {
 	if (loose == true)
 	{
-		GData.gl1->show();
+		screens.gl1->show();
 		showField();
 		Fl::remove_timeout(timer);
 		return;
@@ -1133,7 +1141,7 @@ void winOrFail()
 
 	if (count >= levels[GData.level - 1].mines_count)
 	{
-		GData.gw1->show();
+		screens.gw1->show();
 		Fl::remove_timeout(timer);
 	}
 }
@@ -1273,6 +1281,26 @@ void drowField()
 		}
 		y += 58;
 	}
+
+	menues.easy->remove(screens.gl1); menues.easy->add(screens.gl1);
+	menues.easy->remove(screens.gw1); menues.easy->add(screens.gw1);
+
+	if (game_level == 1)
+	{
+		foundB = new Fl_Box(635, 190, 211, 29, "Мин найдено: 00");
+		foundB->labelsize(24);
+		foundB->align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+		menues.easy->add(foundB);
+
+		leftB = new Fl_Box(635, 219, 211, 29, "Мин осталось: 00");
+		leftB->labelsize(24);
+		leftB->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+		menues.easy->add(leftB);
+
+		complexity = new Fl_Box(670, 141, 240, 29, "Сложность: легкая");
+		complexity->labelsize(24);
+		menues.easy->add(complexity);
+	}
 }
 
 void timer(void* data)
@@ -1293,8 +1321,8 @@ void dock(Fl_Widget* w, void* data)
 	GData.GTime = 0;
 
 	//спрятать окна
-	GData.gl1->hide();
-	GData.gw1->hide();
+	screens.gl1->hide();
+	screens.gw1->hide();
 
 	//обновить время
 	Fl::remove_timeout(timer);
