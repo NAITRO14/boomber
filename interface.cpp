@@ -20,7 +20,41 @@
 #pragma comment(lib, "winmm.lib")
 using namespace std;
 
+//функционал
+void initialize_field();
+void place_mines(char** _field, int rows, int cols, int mines_count);
+void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
+bool open(short i, short j);
+bool inbounds(int row, int col, int rows, int cols);
+void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
+void calculate_numbers(char** field, int rows, int cols);
+void dock(Fl_Widget* w, void* data);
+void timer(void* data);
+void counts_redraw();
+short flags_count();
+void winOrFail();
+void findXY();
+
+//графика
+void ShowConsole() {
+	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+}
+void HideConsole() {
+	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+}
+
+void toGameMenu(Fl_Widget* w, void* data);
+void exitf(Fl_Widget* w, void* data);
+void toGameSettings(Fl_Widget* w, void* data);
+void choose_level(Fl_Widget* w, void* data);
+void Game(Fl_Widget* w, void* data);
+void ButPressed(Fl_Widget* w, void* data);
+void again(Fl_Widget* w, void* data);
 void ShowSign(void* data);
+void drowField();
+void showField();
+void redraw();
+
 //переключаемые кнопки
 class TogButton : public Fl_Button
 {
@@ -370,6 +404,7 @@ public:
 
 };
 
+//кнопка для текста
 class ChangedT : public Fl_Box
 {
 public:
@@ -381,9 +416,7 @@ public:
 	}
 };
 
-
-void winOrFail();
-
+//кнопка игрового поля
 class PGBut : public Fl_Button
 {
 public:
@@ -405,18 +438,17 @@ public:
 		{
 			if (Fl::event_button() == 3)
 			{
-				if (box() != FL_DOWN_BOX)
+				if (box() != FL_DOWN_BOX && label() == "")
 				{
 					if (color() == fl_rgb_color(97, 255, 94))
 					{
 						color(fl_rgb_color(233, 240, 234));
 					}
-					else
+					else if(flags_count() < 10)
 					{
 						color(fl_rgb_color(97, 255, 94));
 					}
-					
-					
+					counts_redraw();
 				}
 				winOrFail();
 			}
@@ -434,6 +466,8 @@ public:
 		label("");
 	}
 };
+
+
 
 //структуры определения игры
 struct GameLevel
@@ -488,55 +522,23 @@ const GameLevel levels[] =
 
 PGBut*** BField;
 
+short moves = 0;
+bool loose = false;
 int game_level = 0;
 GameData GData;
 screen screens;
 menu menues;
 
-//окошко с информацией
+//окошко с информацией(глоб. перемнные нужны потому, что они стираются при переходе между функциями)
 string GTf, GMf;
-string found; string left; string complT;
+string Mfound; string Mleft; string complT;
 
 ChangedT* foundB; ChangedT* leftB;
 ChangedT* complexity;
 
-//функционал
-void initialize_field();
-void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr);
-void save_field_to_file(char** _field, int rows, int cols, const char* _filename);
-bool open(short i, short j);
-bool inbounds(int row, int col, int rows, int cols);
-void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
-void calculate_numbers(char** field, int rows, int cols);
-void timer(void* data);
-void dock(Fl_Widget* w, void* data);
-void findXY();
-
-
+//массивы для работы функций проверки
 int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
 int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
-
-//графика
-void ShowConsole() {
-	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
-}
-void HideConsole() {
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
-}
-
-void toGameMenu(Fl_Widget* w, void* data);
-void exitf(Fl_Widget* w, void* data);
-void toGameSettings(Fl_Widget* w, void* data);
-void choose_level(Fl_Widget* w, void* data);
-void Game(Fl_Widget* w, void* data);
-void ButPressed(Fl_Widget* w, void* data);
-void again(Fl_Widget* w, void* data);
-void drowField();
-void showField();
-void redraw();
-
-short moves = 0;
-bool loose = false;
 
 int main(int argc, char** argv)
 {
@@ -701,7 +703,7 @@ void toGameMenu(Fl_Widget* w, void* data)
 	{
 		menues.easy->hide();
 		menues.main->show();
-		again(nullptr, nullptr);
+		//again(nullptr, nullptr);
 		choose_level(w, data);
 	}
 }
@@ -828,7 +830,7 @@ void ButPressed(Fl_Widget* w, void* data)
 		moves++;
 		initialize_field();
 
-		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count, GData.ButAr[0][0]);
+		place_mines(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols, levels[GData.level - 1].mines_count);
 		calculate_numbers(GData.field, levels[GData.level - 1].rows, levels[GData.level - 1].cols);
 		Fl::add_timeout(1.0, timer, nullptr);
 
@@ -836,6 +838,39 @@ void ButPressed(Fl_Widget* w, void* data)
 	}
 	GMf = "Ходов: " + to_string(moves);
 	GData.m->label(GMf.c_str());
+}
+
+void counts_redraw()
+{
+	short f = flags_count();
+
+	short l = levels[GData.level - 1].mines_count - f;
+
+	Mfound = "Мин найдено: " + to_string(f);
+	Mleft = "Мин осталось: " + to_string(l);
+
+	foundB->label(Mfound.c_str());
+	leftB->label(Mleft.c_str());
+
+	foundB->redraw();
+	leftB->redraw();
+	
+}
+
+short flags_count()
+{
+	short count = 0;
+	for (int i = 0; i < levels[GData.level - 1].rows; i++)
+	{
+		for (int j = 0; j < levels[GData.level - 1].cols; j++)
+		{
+			if (BField[i][j]->color() == fl_rgb_color(97, 255, 94))
+			{
+				count++;
+			}
+		}
+	}
+	return count;
 }
 
 void ShowSign(void* data)
@@ -995,7 +1030,7 @@ void initialize_field()
 	GData.opened = opened;
 }
 
-void place_mines(char** _field, int rows, int cols, int mines_count, PGBut* ButAr)
+void place_mines(char** _field, int rows, int cols, int mines_count)
 {
 	int mines_placed = 0;
 	while (mines_placed < mines_count)
@@ -1239,11 +1274,13 @@ void redraw()
 					{
 						GData.ButAr[i][j]->label("X");
 					}
+					GData.ButAr[i][j]->color(fl_rgb_color(233, 240, 234));
 				}
 				GData.ButAr[i][j]->redraw();
 			}
 		}
 	}
+	counts_redraw();
 	GData.win->redraw();
 }
 
@@ -1260,6 +1297,7 @@ void again(Fl_Widget* w, void* data)
 
 void drowField()
 {
+	//удалить, если уже объявлено
 	if (BField)
 	{
 		for (short i = 0; i < levels[GData.level - 1].rows; i++)
@@ -1271,6 +1309,14 @@ void drowField()
 			delete[] BField[i];
 		}
 		delete[] BField;
+	}
+
+	//удалить, если уже объявлено
+	if (foundB)
+	{
+		delete foundB;
+		delete leftB;
+		delete complexity;
 	}
 
 	short x, y;
@@ -1286,7 +1332,7 @@ void drowField()
 		x = 10;
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			BField[i][j] = new PGBut(x, y, 58, 58);
+			BField[i][j] = new PGBut(x, y, 58, 58, "");
 			GData.ButAr[i][j] = BField[i][j];
 			BField[i][j]->callback(ButPressed, BField);
 			menues.easy->add(BField[i][j]);
@@ -1300,10 +1346,10 @@ void drowField()
 
 	if (game_level == 1)
 	{
-		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 00");
+		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
 		menues.easy->add(foundB);
 
-		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 00");
+		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 10");
 
 		menues.easy->add(leftB);
 
@@ -1330,17 +1376,20 @@ void dock(Fl_Widget* w, void* data)
 	moves = 0; loose = false;
 	GData.GTime = 0;
 
-	//спрятать окна
+	//обновить окна
 	screens.gl1->hide();
 	screens.gw1->hide();
+
+	GData.t->redraw(); //таймер
+	GData.m->label("Ходов: 0");
+	foundB->label("Мин найдено: 0");
+	Mleft = "Мин осталось: " + to_string(levels[GData.level - 1].mines_count);
+	leftB->label(Mleft.c_str());
 
 	//обновить время
 	Fl::remove_timeout(timer);
 	GTf = "Время: 0";
-	GData.t->redraw();
 
-	//обновить ходы
-	GData.m->label("Ходов: 0");
 
 	//В другие функции
 	if (w == nullptr) return;
