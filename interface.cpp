@@ -55,6 +55,7 @@ void drowField();
 void showField();
 void redraw();
 
+//информация об уровнях
 struct GameLevel
 {
 	int rows;
@@ -63,6 +64,44 @@ struct GameLevel
 	string name;
 };
 
+//основная информация об игре
+struct GameData
+{
+	Fl_Double_Window* win;
+	Fl_Widget* pedBut;
+	short level;
+	char** field;
+	bool** opened;
+	short curX;
+	short curY;
+	short zCount;
+	short GTime;
+};
+
+//хранилище меню
+struct menu
+{
+	Fl_Group* hello;
+	Fl_Group* main;
+	Fl_Group* settings;
+	Fl_Group* easy;
+	Fl_Group* normal;
+	Fl_Group* hard;
+};
+
+//хранилище экранов победы/поражения
+struct screen
+{
+	Fl_Group* gl1;
+	Fl_Group* gl2;
+	Fl_Group* gl3;
+
+	Fl_Group* gw1;
+	Fl_Group* gw2;
+	Fl_Group* gw3;
+};
+
+//данные об уровне
 const GameLevel levels[] =
 {
 	{10, 10, 10, "легкий"},
@@ -70,6 +109,9 @@ const GameLevel levels[] =
 	{20, 25, 50, "сложный"}
 };
 
+GameData GData;
+menu menues;
+screen screens;
 
 
 //переключаемые кнопки
@@ -321,7 +363,7 @@ public:
 };
 
 //выезжающие тексты
-class BoxForBut : Fl_Box
+class BoxForBut : public Fl_Box
 {
 public:
 	BoxForBut(int X, int Y, int W, int H, const char* L = 0)
@@ -433,23 +475,6 @@ public:
 	}
 };
 
-struct GameData
-{
-	Fl_Double_Window* win;
-	Fl_Widget* pedBut;
-	short level;
-	char** field;
-	bool** opened;
-	short curX;
-	short curY;
-	short zCount;
-	short GTime;
-
-	ChangedT* t;
-	ChangedT* m;
-};
-GameData GData;
-
 //кнопка игрового поля
 class PGBut : public Fl_Button
 {
@@ -501,30 +526,7 @@ public:
 	}
 };
 
-
-
-//структуры определения игры
-
-
-struct menu
-{
-	Fl_Group* hello;
-	Fl_Group* main;
-	Fl_Group* settings;
-	Fl_Group* easy;
-	Fl_Group* normal;
-	Fl_Group* hard;
-};
-struct screen
-{
-	Fl_Group* gl1;
-	Fl_Group* gl2;
-	Fl_Group* gl3;
-
-	Fl_Group* gw1;
-	Fl_Group* gw2;
-	Fl_Group* gw3;
-};
+//общие элементы сложностей
 struct levels_w
 {
 	BoxForBut* UnG1;
@@ -540,16 +542,12 @@ struct levels_w
 
 
 //глобальные переменные для игры
-
 PGBut*** BField;
 
+levels_w l_widget;
 short moves = 0;
 bool loose = false;
 int game_level = 0;
-screen screens;
-
-levels_w l_widget;
-menu menues;
 
 //окошко с информацией(глоб. перемнные нужны потому, что они стираются при переходе между функциями)
 string GTf, GMf;
@@ -632,6 +630,11 @@ int main(int argc, char** argv)
 	menues.settings = game_settings;
 
 
+	BoxForBut* et1 = nullptr;/* (620, 37, 350, 60);*/
+	l_widget.UnG1 = et1;
+
+	BoxForBut* et2 = nullptr;/* (620, 131, 350, 246);*/
+	l_widget.UnG1 = et2;
 
 	menuBut* againLvl = nullptr;
 	l_widget.again = againLvl;
@@ -642,23 +645,19 @@ int main(int argc, char** argv)
 	ChangedT* cur_time = nullptr;
 	l_widget.cur_t = cur_time;
 
-	ChangedT* cur_steps = nullptr; /*(830, 37, 175, 60, "Ходов: 0");*/
+	ChangedT* cur_steps = nullptr;
 	l_widget.cur_m = cur_steps;
 
 	//группа легкой сложности (3)
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
-	BoxForBut et1(620, 37, 350, 60); 
-
-	BoxForBut et2(620, 131, 350, 246);
 
 	ez_g->end();
 	ez_g->hide();
 	menues.easy = ez_g;
 
-	//группа нормальной сложности
+	//группа нормальной сложности (4)
 	Fl_Group* nor_g = new Fl_Group(0, 0, 1000, 600);
 
-	
 	nor_g->end();
 	nor_g->hide();
 	menues.normal = nor_g;
@@ -1404,53 +1403,67 @@ void drowField()
 		y += sy;
 	}
 
-	menues.easy->remove(screens.gl1); menues.easy->add(screens.gl1);
-	menues.easy->remove(screens.gw1); menues.easy->add(screens.gw1);
+	//menues.easy->remove(screens.gl1); 
+	//menues.easy->remove(screens.gw1); 
 
 	if (game_level == 1)
 	{
-		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
-		menues.easy->add(foundB);
 
+		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
 		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 10");
-		menues.easy->add(leftB);
 
 		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
 		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
 		l_widget.cur_t = new ChangedT(650, 37, 175, 60, "Время: 0");
 		l_widget.cur_m = new ChangedT(830, 37, 175, 60, "Ходов: 0");
+		l_widget.UnG1 = new BoxForBut(620, 37, 350, 60);
+		l_widget.UnG2 = new BoxForBut(620, 131, 350, 246);
 
+		menues.easy->add(l_widget.UnG1);
+		menues.easy->add(l_widget.UnG2);
 		menues.easy->add(l_widget.again);
 		menues.easy->add(l_widget.toMenu);
 		menues.easy->add(l_widget.cur_t);
 		menues.easy->add(l_widget.cur_m);
 
+		menues.easy->add(foundB);
+		menues.easy->add(leftB);
+
 		complexity = new ChangedT(670, 141, 240, 29, "Сложность: легкая");
 		complexity->align(FL_ALIGN_INSIDE);
 		menues.easy->add(complexity);
+
+		menues.easy->add(screens.gl1);
+		menues.easy->add(screens.gw1);
 	}
 	else if (game_level == 2)
 	{
 		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
-		menues.normal->add(foundB);
-
 		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 23");
-		menues.normal->add(leftB);
-
+		
 		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
 		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
 		l_widget.cur_t = new ChangedT(650, 37, 175, 60, "Время: 0");
 		l_widget.cur_m = new ChangedT(830, 37, 175, 60, "Ходов: 0");
+		l_widget.UnG1 = new BoxForBut(620, 37, 350, 60);
+		l_widget.UnG2 = new BoxForBut(620, 131, 350, 246);
 
+		menues.normal->add(l_widget.UnG1);
+		menues.normal->add(l_widget.UnG2);
 		menues.normal->add(l_widget.cur_t);
 		menues.normal->add(l_widget.cur_m);
-
 		menues.normal->add(l_widget.again);
 		menues.normal->add(l_widget.toMenu);
+
+		menues.normal->add(foundB);
+		menues.normal->add(leftB);
 
 		complexity = new ChangedT(670, 141, 240, 29, "Сложность: нормальная");
 		complexity->align(FL_ALIGN_INSIDE);
 		menues.normal->add(complexity);
+
+		menues.normal->add(screens.gl1);
+		menues.normal->add(screens.gw1);
 	}
 	l_widget.again->callback(dock, GData.win);
 	l_widget.toMenu->callback(dock, nullptr);
