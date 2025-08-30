@@ -499,6 +499,8 @@ struct menu
 	Fl_Group* main;
 	Fl_Group* settings;
 	Fl_Group* easy;
+	Fl_Group* normal;
+	Fl_Group* hard;
 };
 struct screen
 {
@@ -509,6 +511,17 @@ struct screen
 	Fl_Group* gw1;
 	Fl_Group* gw2;
 	Fl_Group* gw3;
+};
+struct levels_w
+{
+	BoxForBut* UnG1;
+	BoxForBut* UnG2;
+
+	menuBut* toMenu;
+	menuBut* again;
+
+	ChangedT* cur_t;
+	ChangedT* cur_m;
 };
 
 const GameLevel levels[] =
@@ -606,11 +619,11 @@ int main(int argc, char** argv)
 	game_settings->hide();
 	menues.settings = game_settings;
 
+
+
 	//группа легкой сложности (3)
 	
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
-	short x, y;
-	const short size = 10;
 	BoxForBut et1(620, 37, 350, 60); 
 
 	ChangedT cur_time(650, 37, 175, 60, "Время: 0");
@@ -624,28 +637,15 @@ int main(int argc, char** argv)
 	menuBut leaveLvl(606, 510, 169, 63, "В меню");
 	menuBut againLvl(814, 510, 169, 63, "Заново");
 
-	//экран поражения
-	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
+	//===============================================
 
-	Fl_Box bckgrL1(10, 213, 580, 174);
-	bckgrL1.color(fl_rgb_color(192, 192, 192));
-	bckgrL1.box(FL_FLAT_BOX);
+	//группа нормальной сложности
+	Fl_Group* nor_g = new Fl_Group(0, 0, 1000, 600);
 
-	Fl_Box tgrL1(10, 220, 580, 159);
-	tgrL1.color(fl_rgb_color(169, 169, 169));
-	tgrL1.box(FL_FLAT_BOX);
-
-	Fl_Box tgrTextL1(30, 254, 539, 58, "Открыта мина");
-	tgrTextL1.labelcolor(fl_rgb_color(113, 0, 0));
-	tgrTextL1.labelsize(48);
-
-	Fl_Box tgrTextL2(30, 330, 539, 58, "Проигрыш");
-	tgrTextL2.labelsize(24);
-
-	lScreen1->hide();
-	lScreen1->end();
-	screens.gl1 = lScreen1;
-
+	
+	nor_g->end();
+	nor_g->hide();
+	menues.normal = nor_g;
 
 	//экран победы
 	Fl_Group* wScreen1 = new Fl_Group(10, 10, 580, 580);
@@ -672,8 +672,30 @@ int main(int argc, char** argv)
 
 	ez_g->end();
 	ez_g->hide();
-
 	menues.easy = ez_g;
+
+	//экран поражения
+	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
+
+	Fl_Box bckgrL1(10, 213, 580, 174);
+	bckgrL1.color(fl_rgb_color(192, 192, 192));
+	bckgrL1.box(FL_FLAT_BOX);
+
+	Fl_Box tgrL1(10, 220, 580, 159);
+	tgrL1.color(fl_rgb_color(169, 169, 169));
+	tgrL1.box(FL_FLAT_BOX);
+
+	Fl_Box tgrTextL1(30, 254, 539, 58, "Открыта мина");
+	tgrTextL1.labelcolor(fl_rgb_color(113, 0, 0));
+	tgrTextL1.labelsize(48);
+
+	Fl_Box tgrTextL2(30, 330, 539, 58, "Проигрыш");
+	tgrTextL2.labelsize(24);
+
+	lScreen1->hide();
+	lScreen1->end();
+	screens.gl1 = lScreen1;
+
 	win.end();
 	win.show(argc, argv);
 	return Fl::run();
@@ -785,15 +807,18 @@ void Game(Fl_Widget* w, void* data)
 	else if (game_level == 1)
 	{
 		menues.easy->show();
+		
 	}
 	else if (game_level == 2)
 	{
-		menues.settings->show();
+		menues.normal->show();
 	}
 	else if (game_level == 3)
 	{
 		menues.settings->show();
 	}
+	
+	
 }
 
 void findXY()
@@ -1319,11 +1344,28 @@ void drowField()
 		delete complexity;
 	}
 
-	short x, y;
+	short x, y, sx, sy;
 	BField = new PGBut **[25];
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
 		BField[i] = new PGBut * [20];
+	}
+	
+	Fl_Group* gr = nullptr;
+
+	if (game_level == 1)
+	{
+		gr = menues.easy;
+		sx = 58; sy = 58;
+	}
+	else if (game_level == 2)
+	{
+		gr = menues.normal;
+		sx = 38.1; sy = 38.6;
+	}
+	else if (game_level == 2)
+	{
+		gr = menues.hard;
 	}
 
 	y = 10;
@@ -1332,13 +1374,14 @@ void drowField()
 		x = 10;
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			BField[i][j] = new PGBut(x, y, 58, 58, "");
+			BField[i][j] = new PGBut(x, y, sx, sy, "");
 			GData.ButAr[i][j] = BField[i][j];
 			BField[i][j]->callback(ButPressed, BField);
-			menues.easy->add(BField[i][j]);
-			x += 58;
+			gr->add(BField[i][j]);
+			
+			x += sx;
 		}
-		y += 58;
+		y += sy;
 	}
 
 	menues.easy->remove(screens.gl1); menues.easy->add(screens.gl1);
@@ -1356,6 +1399,19 @@ void drowField()
 		complexity = new ChangedT(670, 141, 240, 29, "Сложность: легкая");
 		complexity->align(FL_ALIGN_INSIDE);
 		menues.easy->add(complexity);
+	}
+	else if (game_level == 2)
+	{
+		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
+		menues.normal->add(foundB);
+
+		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 23");
+
+		menues.normal->add(leftB);
+
+		complexity = new ChangedT(670, 141, 240, 29, "Сложность: нормальная");
+		complexity->align(FL_ALIGN_INSIDE);
+		menues.normal->add(complexity);
 	}
 }
 
