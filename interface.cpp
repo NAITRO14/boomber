@@ -55,6 +55,21 @@ void drowField();
 void showField();
 void redraw();
 
+struct GameLevel
+{
+	int rows;
+	int cols;
+	int mines_count;
+	string name;
+};
+
+const GameLevel levels[] =
+{
+	{10, 10, 10, "легкий"},
+	{15, 15, 23, "средний"},
+	{20, 25, 50, "сложный"}
+};
+
 //переключаемые кнопки
 class TogButton : public Fl_Button
 {
@@ -444,7 +459,7 @@ public:
 					{
 						color(fl_rgb_color(233, 240, 234));
 					}
-					else if(flags_count() < 10)
+					else if (flags_count() < 10/*levels[GData.level - 1].mines_count)*/)
 					{
 						color(fl_rgb_color(97, 255, 94));
 					}
@@ -470,18 +485,12 @@ public:
 
 
 //структуры определения игры
-struct GameLevel
-{
-	int rows;
-	int cols;
-	int mines_count;
-	string name;
-};
+
 struct GameData
 {
 	PGBut* ButAr[20][25];
 	Fl_Double_Window* win;
-	PGBut* pedBut;
+	Fl_Widget* pedBut;
 	short level;
 	char** field;
 	bool** opened;
@@ -512,6 +521,7 @@ struct screen
 	Fl_Group* gw2;
 	Fl_Group* gw3;
 };
+
 struct levels_w
 {
 	BoxForBut* UnG1;
@@ -524,12 +534,7 @@ struct levels_w
 	ChangedT* cur_m;
 };
 
-const GameLevel levels[] =
-{
-	{10, 10, 10, "легкий"},
-	{15, 15, 23, "средний"},
-	{20, 25, 50, "сложный"}
-};
+
 
 //глобальные переменные для игры
 
@@ -538,8 +543,9 @@ PGBut*** BField;
 short moves = 0;
 bool loose = false;
 int game_level = 0;
-GameData GData;
 screen screens;
+GameData GData;
+levels_w l_widget;
 menu menues;
 
 //окошко с информацией(глоб. перемнные нужны потому, что они стираются при переходе между функциями)
@@ -552,6 +558,9 @@ ChangedT* complexity;
 //массивы для работы функций проверки
 int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
 int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+
+
+
 
 int main(int argc, char** argv)
 {
@@ -621,23 +630,27 @@ int main(int argc, char** argv)
 
 
 
+	menuBut* againLvl = nullptr;
+	l_widget.again = againLvl;
+
+	menuBut* leaveLvl = nullptr;
+	l_widget.toMenu = leaveLvl;
+
+	ChangedT* cur_time = nullptr;
+	l_widget.cur_t = cur_time;
+
+	ChangedT* cur_steps = nullptr; /*(830, 37, 175, 60, "Ходов: 0");*/
+	l_widget.cur_m = cur_steps;
+
 	//группа легкой сложности (3)
-	
 	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
 	BoxForBut et1(620, 37, 350, 60); 
 
-	ChangedT cur_time(650, 37, 175, 60, "Время: 0");
-	GData.t = &cur_time;
-
-	ChangedT cur_steps(830, 37, 175, 60, "Ходов: 0");
-	GData.m = &cur_steps;
-
 	BoxForBut et2(620, 131, 350, 246);
 
-	menuBut leaveLvl(606, 510, 169, 63, "В меню");
-	menuBut againLvl(814, 510, 169, 63, "Заново");
-
-	//===============================================
+	ez_g->end();
+	ez_g->hide();
+	menues.easy = ez_g;
 
 	//группа нормальной сложности
 	Fl_Group* nor_g = new Fl_Group(0, 0, 1000, 600);
@@ -664,15 +677,7 @@ int main(int argc, char** argv)
 
 	wScreen1->hide();
 	wScreen1->end();
-	screens.gw1 = wScreen1;
-
-
-	leaveLvl.callback(dock, &win);
-	againLvl.callback(dock, nullptr);
-
-	ez_g->end();
-	ez_g->hide();
-	menues.easy = ez_g;
+	screens.gw1 = wScreen1;	
 
 	//экран поражения
 	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
@@ -710,20 +715,27 @@ void toGameMenu(Fl_Widget* w, void* data)
 	//обновление переменных
 	game_level = 0;
 
-	if (win->child(0)->visible())
+	if (menues.hello->visible())
 	{
 		menues.hello->hide();
 		menues.main->show();
 	}
-	else if (win->child(2)->visible())
+	else if (menues.settings->visible())
 	{
 		menues.settings->hide();
 		menues.main->show();
 		choose_level(w, data);
 	}
-	else if (win->child(3)->visible())
+	else if (menues.easy->visible())
 	{
 		menues.easy->hide();
+		menues.main->show();
+		//again(nullptr, nullptr);
+		choose_level(w, data);
+	}
+	else if (menues.normal->visible())
+	{
+		menues.normal->hide();
 		menues.main->show();
 		//again(nullptr, nullptr);
 		choose_level(w, data);
@@ -758,6 +770,23 @@ void choose_level(Fl_Widget* w, void* data)
 	for (short i = 0; i < 3; i++)
 	{
 		menues.settings->child(i)->color(fl_rgb_color(169, 169, 169));
+	}
+
+	if(game_level != 0)
+	{
+		//удалить, если уже объявлено
+		if (BField)
+		{
+			for (short i = 0; i < levels[GData.level - 1].rows; i++)
+			{
+				for (short j = 0; j < levels[GData.level - 1].cols; j++)
+				{
+					delete BField[i][j];
+				}
+				delete[] BField[i];
+			}
+			delete[] BField;
+		}
 	}
 
 	if (w->label() == "Легко")
@@ -827,7 +856,7 @@ void findXY()
 	{
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			if (GData.ButAr[i][j] == GData.pedBut)
+			if (BField[i][j] == GData.pedBut)
 			{
 				GData.curX = i;
 				GData.curY = j;
@@ -862,7 +891,7 @@ void ButPressed(Fl_Widget* w, void* data)
 		open(GData.curX, GData.curY);
 	}
 	GMf = "Ходов: " + to_string(moves);
-	GData.m->label(GMf.c_str());
+	l_widget.cur_m->label(GMf.c_str());
 }
 
 void counts_redraw()
@@ -1063,7 +1092,7 @@ void place_mines(char** _field, int rows, int cols, int mines_count)
 		int x = rand() % rows;
 		int y = rand() % cols;
 
-		if (GData.ButAr[x][y] == GData.pedBut or abs(x - GData.curX) <= 1 and abs(y - GData.curY) <= 1)
+		if (BField[x][y] == GData.pedBut or abs(x - GData.curX) <= 1 and abs(y - GData.curY) <= 1)
 		{
 			continue;
 		}
@@ -1176,7 +1205,7 @@ bool open(short i, short j)
 	else if (GData.field[i][j] == '*')
 	{
 		GData.opened[i][j] = true;
-		GData.ButAr[i][j]->color(FL_RED);
+		BField[i][j]->color(FL_RED);
 		loose = true;
 		redraw();
 	}
@@ -1205,7 +1234,7 @@ void winOrFail()
 	{
 		for (int j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			if (GData.ButAr[i][j]->color() == fl_rgb_color(97, 255, 94) and GData.field[i][j] == '*')
+			if (BField[i][j]->color() == fl_rgb_color(97, 255, 94) and GData.field[i][j] == '*')
 			{
 				count++;
 			}
@@ -1245,63 +1274,63 @@ void redraw()
 			{
 				if(GData.field[i][j] == '0')
 				{
-					GData.ButAr[i][j]->box(FL_DOWN_BOX);
-					GData.ButAr[i][j]->color(fl_rgb_color(186, 186, 186));
+					BField[i][j]->box(FL_DOWN_BOX);
+					BField[i][j]->color(fl_rgb_color(186, 186, 186));
 				}
 				else if (GData.field[i][j] == '*')
 				{
-					GData.ButAr[i][j]->box(FL_DOWN_BOX);
-					GData.ButAr[i][j]->label("*");
+					BField[i][j]->box(FL_DOWN_BOX);
+					BField[i][j]->label("*");
 				}
 				else
 				{
 					if (GData.field[i][j] == '1')
 					{
-						GData.ButAr[i][j]->label("1");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(27, 23, 255));
+						BField[i][j]->label("1");
+						BField[i][j]->labelcolor(fl_rgb_color(27, 23, 255));
 					}
 					else if (GData.field[i][j] == '2')
 					{
-						GData.ButAr[i][j]->label("2");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(27, 158, 49));
+						BField[i][j]->label("2");
+						BField[i][j]->labelcolor(fl_rgb_color(27, 158, 49));
 					}
 					else if (GData.field[i][j] == '3')
 					{
-						GData.ButAr[i][j]->label("3");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(156, 76, 30));
+						BField[i][j]->label("3");
+						BField[i][j]->labelcolor(fl_rgb_color(156, 76, 30));
 					}
 					else if (GData.field[i][j] == '4')
 					{
-						GData.ButAr[i][j]->label("4");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(191, 11, 11));
+						BField[i][j]->label("4");
+						BField[i][j]->labelcolor(fl_rgb_color(191, 11, 11));
 					}
 					else if (GData.field[i][j] == '5')
 					{
-						GData.ButAr[i][j]->label("5");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(219, 2, 132));
+						BField[i][j]->label("5");
+						BField[i][j]->labelcolor(fl_rgb_color(219, 2, 132));
 					}
 					else if (GData.field[i][j] == '6')
 					{
-						GData.ButAr[i][j]->label("6");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(255, 195, 43));
+						BField[i][j]->label("6");
+						BField[i][j]->labelcolor(fl_rgb_color(255, 195, 43));
 					}
 					else if (GData.field[i][j] == '7')
 					{
-						GData.ButAr[i][j]->label("7");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(255, 66, 66));
+						BField[i][j]->label("7");
+						BField[i][j]->labelcolor(fl_rgb_color(255, 66, 66));
 					}
 					else if (GData.field[i][j] == '8')
 					{
-						GData.ButAr[i][j]->label("8");
-						GData.ButAr[i][j]->labelcolor(fl_rgb_color(255, 0, 0));
+						BField[i][j]->label("8");
+						BField[i][j]->labelcolor(fl_rgb_color(255, 0, 0));
 					}
 					else
 					{
-						GData.ButAr[i][j]->label("X");
+						BField[i][j]->label("X");
 					}
-					GData.ButAr[i][j]->color(fl_rgb_color(233, 240, 234));
+					BField[i][j]->color(fl_rgb_color(233, 240, 234));
 				}
-				GData.ButAr[i][j]->redraw();
+				BField[i][j]->redraw();
 			}
 		}
 	}
@@ -1315,7 +1344,7 @@ void again(Fl_Widget* w, void* data)
 	{
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			GData.ButAr[i][j]->reset_state();
+			BField[i][j]->reset_state();
 		}
 	}
 }
@@ -1323,25 +1352,13 @@ void again(Fl_Widget* w, void* data)
 void drowField()
 {
 	//удалить, если уже объявлено
-	if (BField)
-	{
-		for (short i = 0; i < levels[GData.level - 1].rows; i++)
-		{
-			for (short j = 0; j < levels[GData.level - 1].cols; j++)
-			{
-				delete BField[i][j];
-			}
-			delete[] BField[i];
-		}
-		delete[] BField;
-	}
-
-	//удалить, если уже объявлено
 	if (foundB)
 	{
 		delete foundB;
 		delete leftB;
 		delete complexity;
+		delete l_widget.cur_m;
+		delete l_widget.cur_t;
 	}
 
 	short x, y, sx, sy;
@@ -1375,7 +1392,7 @@ void drowField()
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
 		{
 			BField[i][j] = new PGBut(x, y, sx, sy, "");
-			GData.ButAr[i][j] = BField[i][j];
+			BField[i][j] = BField[i][j];
 			BField[i][j]->callback(ButPressed, BField);
 			gr->add(BField[i][j]);
 			
@@ -1393,8 +1410,17 @@ void drowField()
 		menues.easy->add(foundB);
 
 		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 10");
-
 		menues.easy->add(leftB);
+
+		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
+		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
+		l_widget.cur_t = new ChangedT(650, 37, 175, 60, "Время: 0");
+		l_widget.cur_m = new ChangedT(830, 37, 175, 60, "Ходов: 0");
+
+		menues.easy->add(l_widget.again);
+		menues.easy->add(l_widget.toMenu);
+		menues.easy->add(l_widget.cur_t);
+		menues.easy->add(l_widget.cur_m);
 
 		complexity = new ChangedT(670, 141, 240, 29, "Сложность: легкая");
 		complexity->align(FL_ALIGN_INSIDE);
@@ -1406,13 +1432,25 @@ void drowField()
 		menues.normal->add(foundB);
 
 		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 23");
-
 		menues.normal->add(leftB);
+
+		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
+		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
+		l_widget.cur_t = new ChangedT(650, 37, 175, 60, "Время: 0");
+		l_widget.cur_m = new ChangedT(830, 37, 175, 60, "Ходов: 0");
+
+		menues.normal->add(l_widget.cur_t);
+		menues.normal->add(l_widget.cur_m);
+
+		menues.normal->add(l_widget.again);
+		menues.normal->add(l_widget.toMenu);
 
 		complexity = new ChangedT(670, 141, 240, 29, "Сложность: нормальная");
 		complexity->align(FL_ALIGN_INSIDE);
 		menues.normal->add(complexity);
 	}
+	l_widget.again->callback(dock, GData.win);
+	l_widget.toMenu->callback(dock, nullptr);
 }
 
 void timer(void* data)
@@ -1420,7 +1458,7 @@ void timer(void* data)
 	GData.GTime++;
 
 	GTf = "Время: " + to_string(GData.GTime);
-	GData.t->label(GTf.c_str());
+	l_widget.cur_t->label(GTf.c_str());
 
 	Fl::repeat_timeout(1.0, timer, nullptr);
 }
@@ -1436,8 +1474,8 @@ void dock(Fl_Widget* w, void* data)
 	screens.gl1->hide();
 	screens.gw1->hide();
 
-	GData.t->redraw(); //таймер
-	GData.m->label("Ходов: 0");
+	l_widget.cur_t->redraw(); //таймер
+	l_widget.cur_m->label("Ходов: 0");
 	foundB->label("Мин найдено: 0");
 	Mleft = "Мин осталось: " + to_string(levels[GData.level - 1].mines_count);
 	leftB->label(Mleft.c_str());
