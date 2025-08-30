@@ -70,6 +70,8 @@ const GameLevel levels[] =
 	{20, 25, 50, "сложный"}
 };
 
+
+
 //переключаемые кнопки
 class TogButton : public Fl_Button
 {
@@ -431,6 +433,23 @@ public:
 	}
 };
 
+struct GameData
+{
+	Fl_Double_Window* win;
+	Fl_Widget* pedBut;
+	short level;
+	char** field;
+	bool** opened;
+	short curX;
+	short curY;
+	short zCount;
+	short GTime;
+
+	ChangedT* t;
+	ChangedT* m;
+};
+GameData GData;
+
 //кнопка игрового поля
 class PGBut : public Fl_Button
 {
@@ -459,7 +478,7 @@ public:
 					{
 						color(fl_rgb_color(233, 240, 234));
 					}
-					else if (flags_count() < 10/*levels[GData.level - 1].mines_count)*/)
+					else if (flags_count() < levels[GData.level - 1].mines_count)
 					{
 						color(fl_rgb_color(97, 255, 94));
 					}
@@ -486,22 +505,7 @@ public:
 
 //структуры определения игры
 
-struct GameData
-{
-	PGBut* ButAr[20][25];
-	Fl_Double_Window* win;
-	Fl_Widget* pedBut;
-	short level;
-	char** field;
-	bool** opened;
-	short curX;
-	short curY;
-	short zCount;
-	short GTime;
 
-	ChangedT* t;
-	ChangedT* m;
-};
 struct menu
 {
 	Fl_Group* hello;
@@ -521,7 +525,6 @@ struct screen
 	Fl_Group* gw2;
 	Fl_Group* gw3;
 };
-
 struct levels_w
 {
 	BoxForBut* UnG1;
@@ -544,7 +547,7 @@ short moves = 0;
 bool loose = false;
 int game_level = 0;
 screen screens;
-GameData GData;
+
 levels_w l_widget;
 menu menues;
 
