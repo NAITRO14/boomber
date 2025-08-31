@@ -145,7 +145,13 @@ public:
 		}
 	}
 
-	
+	static void delay(void* data)
+	{
+		TogButton* btn = static_cast<TogButton*>(data);
+		btn->position(btn->x(), btn->Y - 5);
+		btn->redraw();
+		if (btn->parent()) btn->parent()->parent()->redraw();
+	}
 
 	int handle(int event) override
 	{
@@ -167,7 +173,7 @@ public:
 			}
 			inFocus = true;
 			ShowSign(this);
-			position(x(), Y - 5);
+			Fl::add_timeout(0.05, delay, this);
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
 			return 1;
@@ -176,6 +182,7 @@ public:
 		{
 			inFocus = false;
 			ShowSign(this);
+			Fl::remove_timeout(delay, this);
 			position(x(), Y);
 			redraw();
 			if (parent()) { parent()->parent()->redraw(); }
