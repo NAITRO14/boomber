@@ -1,4 +1,5 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+#define SDL_MAIN_HANDLED
 //функцонал
 #include <iostream>
 #include <windows.h>
@@ -16,8 +17,12 @@
 
 
 //звуки
-#include <mmsystem.h>
-#pragma comment(lib, "winmm.lib")
+//#include <mmsystem.h>
+//#pragma comment(lib, "winmm.lib")
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
+
 using namespace std;
 
 //функционал
@@ -118,6 +123,9 @@ screen screens;
 class TogButton : public Fl_Button
 {
 	int Y = y(); //чтобы вернуть кнопку на место
+
+	Mix_Chunk* click = nullptr;
+	Mix_Chunk* hover = nullptr;
 public:
 	bool inFocus = false;
 
@@ -128,7 +136,16 @@ public:
 		selection_color(fl_rgb_color(143, 175, 255));
 		clear_visible_focus();
 		labelsize(24);
+
+		click = Mix_LoadWAV("sounds/selection.wav");
+		hover = Mix_LoadWAV("sounds/on_aim.wav");
+		if (!click or !hover)
+		{
+			cerr << "Звук не загружен" << Mix_GetError() << endl;
+		}
 	}
+
+	
 
 	int handle(int event) override
 	{
@@ -136,17 +153,17 @@ public:
 		{
 		case FL_PUSH:
 		{
-			if (!PlaySound(TEXT("sounds/selection.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			if (click)
 			{
-				cout << "Звук не найден" << endl;
+				Mix_PlayChannel(-1, click, 0);
 			}
 			return Fl_Button::handle(event);
 		}
 		case FL_ENTER:
 		{
-			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
+			if (hover)
 			{
-				cout << "Звук не найден" << endl;
+				Mix_PlayChannel(-1, hover, 0);
 			}
 			inFocus = true;
 			ShowSign(this);
@@ -166,8 +183,19 @@ public:
 		}
 		}
 
-
 		return Fl_Button::handle(event);
+	}
+
+	~TogButton()
+	{
+		if (click)
+		{
+			Mix_FreeChunk(click);
+		}
+		if (hover)
+		{
+			Mix_FreeChunk(hover);
+		}
 	}
 
 	void reset_state() {
@@ -334,27 +362,51 @@ private:
 //дочерний для кнопок в меню
 class menuBut : public MyButton
 {
+private:
+	Mix_Chunk* click = nullptr;
+	Mix_Chunk* hover = nullptr;
 
 public:
 	menuBut(int X, int Y, int W, int H, const char* L = 0)
-		: MyButton(X, Y, W, H, L) {}
+		: MyButton(X, Y, W, H, L) 
+	{
+		click = Mix_LoadWAV("sounds/on_click.wav");
+		if (!click) {
+			cerr << "Звук не найден: " << Mix_GetError() << endl;
+		}
+
+		hover = Mix_LoadWAV("sounds/on_aim.wav");
+		if (!hover) {
+			cerr << "Звук не найден: " << Mix_GetError() << endl;
+		}
+	}
+
+	//деструктор - здесь для того, чтобы освободить место от звука
+	~menuBut()
+	{
+		if (click) {
+			Mix_FreeChunk(click);
+		}
+		if (hover) {
+			Mix_FreeChunk(hover);
+		}
+	}
 
 	int handle(int event)
-	{
+	{ 
 		switch (event)
 		{
 		case FL_PUSH:
 		{
-			if (!PlaySound(TEXT("sounds/on_click.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
+			if (click) {
+				Mix_PlayChannel(-1, click, 0);
 			}
+			
 		}break;
 		case FL_ENTER:
 		{
-			if (!PlaySound(TEXT("sounds/on_aim.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
+			if (hover) {
+				Mix_PlayChannel(-1, hover, 0);
 			}
 		}break;
 		}
@@ -378,13 +430,28 @@ public:
 //дочерний класс для кнопки "играть"
 class  PlayBut : public MyButton
 {
-	
-
+private:
 	Fl_Color startColor = fl_rgb_color(169, 169, 169);
 	Fl_Color endColor = fl_rgb_color(237, 55, 55);
+
+	Mix_Chunk* sound = nullptr;
 public:
 	PlayBut(int X, int Y, int W, int H, const char* L = 0)
-		: MyButton(X, Y, W, H, L) {}
+		: MyButton(X, Y, W, H, L) 
+	{
+		sound = Mix_LoadWAV("sounds/pbip.wav");
+		if (!sound)
+		{
+			cerr << "Звук не найден: " << Mix_GetError() << endl;
+		}
+	}
+	~PlayBut()
+	{
+		if (sound)
+		{
+			Mix_FreeChunk(sound);
+		}
+	}
 
 	float Progress = 0.0f;
 	bool anim = false;
@@ -397,11 +464,11 @@ public:
 		case FL_ENTER:
 		{
 			startAnim(true);
-			if (!PlaySound(TEXT("sounds/pbip.wav"), NULL, SND_FILENAME | SND_ASYNC))
-			{
-				cout << "Звук не найден" << endl;
-			}
 
+			if (sound)
+			{
+				Mix_PlayChannel(-1, sound, 0);
+			}
 		}break;
 		case FL_LEAVE:
 		{
@@ -411,6 +478,7 @@ public:
 		}
 		return MyButton::handle(event);
 	}
+	
 
 	void startAnim(bool inc)
 	{
@@ -572,7 +640,25 @@ int main(int argc, char** argv)
 
 	//ЕСЛИ НОВЫЕ ВИДЖЕТЫ НЕ ОТРИСОВЫВАЮТСЯ, НУЖНО ПРОВЕРИТЬ ФУНКЦИИ. ГДЕ-ТО ОНИ МОГУТ ЯВНО ПРИВОДИТЬСЯ К НЕВЕРНОМУ КЛАССУ!!!
 
-	
+
+	 /*Инициализация SDL с поддержкой аудио*/
+	if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+		std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
+		return 1;
+	}
+	 //Инициализация SDL_mixer
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+		std::cerr << "Mix_OpenAudio failed: " << Mix_GetError() << std::endl;
+		SDL_Quit();
+		return 1;
+	}
+	Mix_Chunk* sound = Mix_LoadWAV("sounds/on_click.wav");
+	if (!sound) {
+		std::cerr << "Failed to load sound: " << Mix_GetError() << std::endl;
+		Mix_CloseAudio();
+		SDL_Quit();
+		return 1;
+	}
 
 	HideConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
@@ -616,11 +702,12 @@ int main(int argc, char** argv)
 	 
 	PlayBut play(408, 353, 184, 76, "Играть");
 
+
 	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
 
-	play.callback(Game, &win);
+	play.callback(Game, nullptr);
 	back.callback(toGameMenu, &win);
 	easy.callback(choose_level, &win);
 	normal.callback(choose_level, &win);
@@ -705,7 +792,14 @@ int main(int argc, char** argv)
 
 	win.end();
 	win.show(argc, argv);
-	return Fl::run();
+	// Запуск событийного цикла FLTK
+	int ret = Fl::run();
+
+	// Освобождение ресурсов
+	Mix_CloseAudio();
+	SDL_Quit();
+
+	return ret;
 }
 
 void toGameMenu(Fl_Widget* w, void* data)
@@ -774,22 +868,7 @@ void choose_level(Fl_Widget* w, void* data)
 		menues.settings->child(i)->color(fl_rgb_color(169, 169, 169));
 	}
 
-	if(game_level != 0)
-	{
-		//удалить, если уже объявлено
-		if (BField)
-		{
-			for (short i = 0; i < levels[GData.level - 1].rows; i++)
-			{
-				for (short j = 0; j < levels[GData.level - 1].cols; j++)
-				{
-					delete BField[i][j];
-				}
-				delete[] BField[i];
-			}
-			delete[] BField;
-		}
-	}
+	
 
 	if (w->label() == "Легко")
 	{
@@ -818,24 +897,27 @@ void choose_level(Fl_Widget* w, void* data)
 
 	GData.level = game_level;
 
+	
+
 	win->redraw();
 }
 
 void Game(Fl_Widget* w, void* data)
 {
-	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	menues.settings->hide();
 	PlayBut* self = (PlayBut*)w;
 	self->icreasing = false;
 	self->reset_state();
 
-	drowField();
-
-	if (game_level == 0)
+	if (game_level == 0 or game_level == 3)
 	{
 		menues.settings->show();
+		return;
 	}
-	else if (game_level == 1)
+
+	drowField();
+
+	if (game_level == 1)
 	{
 		menues.easy->show();
 		
@@ -848,8 +930,6 @@ void Game(Fl_Widget* w, void* data)
 	{
 		menues.settings->show();
 	}
-	
-	
 }
 
 void findXY()
@@ -1500,6 +1580,8 @@ void dock(Fl_Widget* w, void* data)
 	Fl::remove_timeout(timer);
 	GTf = "Время: 0";
 
+	
+
 
 	//В другие функции
 	if (w == nullptr) return;
@@ -1509,6 +1591,24 @@ void dock(Fl_Widget* w, void* data)
 	}
 	else if ((strcmp(w->label(), "В меню") == 0))
 	{
+		//перед выходом в меню, удалить старое игровое поле
+		if (game_level != 0 and game_level != 3)
+		{
+			//удалить, если уже объявлено
+			if (BField)
+			{
+				for (short i = 0; i < levels[GData.level - 1].rows; i++)
+				{
+					for (short j = 0; j < levels[GData.level - 1].cols; j++)
+					{
+						delete BField[i][j];
+					}
+					delete[] BField[i];
+				}
+				delete[] BField;
+			}
+		}
+
 		toGameMenu(w, GData.win);
 	}
 }
