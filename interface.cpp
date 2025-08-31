@@ -572,7 +572,7 @@ public:
 		{
 			if (Fl::event_button() == 3)
 			{
-				if (box() != FL_DOWN_BOX && label() == "")
+				if (box() != FL_DOWN_BOX && (label() == "" || label() == "*"))
 				{
 					if (color() == fl_rgb_color(97, 255, 94))
 					{
@@ -632,10 +632,11 @@ ChangedT* foundB; ChangedT* leftB;
 ChangedT* complexity;
 
 //массивы для работы функций проверки
-int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
-int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+short dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+short dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 
-
+short dx1[] = { -1, 0, 0, 1 };
+short dy1[] = { 0,  -1, 1, 0 };
 
 
 int main(int argc, char** argv)
@@ -1277,9 +1278,9 @@ void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int
 	_opened[_row][_col] = true;
 	if (_field[_row][_col] != '0') return;
 
-	for (int k = 0; k < 8; k++)
+	for (int k = 0; k < 4; k++)
 	{
-		open_empty(_field, _opened, rows, cols, _row + dx[k], _col + dy[k]);
+		open_empty(_field, _opened, rows, cols, _row + dx1[k], _col + dy1[k]);
 	}
 	
 }
@@ -1357,7 +1358,7 @@ void redraw()
 	{
 		for (short j = 0; j < levels[GData.level-1].cols; j++)
 		{
-			/*if (GData.field[i][j] == '*') GData.ButAr[i][j]->label("*");*/
+			if (GData.field[i][j] == '*') BField[i][j]->label("*");
 
 			if (GData.opened[i][j] == true)
 			{
