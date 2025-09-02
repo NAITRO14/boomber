@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include "resource.h"
 
 //графика
 #include <FL/Fl.H>
@@ -15,11 +16,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
 
-
 //звуки
-//#include <mmsystem.h>
-//#pragma comment(lib, "winmm.lib")
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 
@@ -81,6 +78,9 @@ struct GameData
 	short curY;
 	short zCount;
 	short GTime;
+	bool isHackAct;
+
+	
 };
 
 //хранилище меню
@@ -550,6 +550,37 @@ public:
 	}
 };
 
+class hackBut : public TogButton
+{
+public:
+	hackBut(int X, int Y, int W, int H, const char* L = 0)
+		:TogButton(X, Y, W, H, L)
+	{
+
+	}
+
+	int handle(int event)
+	{
+		switch (event)
+		{
+		case FL_PUSH:
+		{
+			if (GData.isHackAct == 0)
+			{
+				GData.isHackAct = 1;
+				color(fl_rgb_color(255, 128, 64));
+			}
+			else
+			{
+				GData.isHackAct = 0;
+				reset_state();
+			}
+		}break;
+		}
+		return TogButton::handle(event);
+	}
+};
+
 //кнопка игрового поля
 class PGBut : public Fl_Button
 {
@@ -614,7 +645,12 @@ struct levels_w
 	ChangedT* cur_m;
 };
 
+struct widgets
+{
+	hackBut* hBut;
+};
 
+widgets widget;
 
 //глобальные переменные для игры
 PGBut*** BField;
@@ -647,7 +683,6 @@ int main(int argc, char** argv)
 	waveOutSetVolume(NULL, volume);*/
 
 	//ЕСЛИ НОВЫЕ ВИДЖЕТЫ НЕ ОТРИСОВЫВАЮТСЯ, НУЖНО ПРОВЕРИТЬ ФУНКЦИИ. ГДЕ-ТО ОНИ МОГУТ ЯВНО ПРИВОДИТЬСЯ К НЕВЕРНОМУ КЛАССУ!!!
-
 
 	 /*Инициализация SDL с поддержкой аудио*/
 	if (SDL_Init(SDL_INIT_AUDIO) < 0) {
@@ -708,12 +743,14 @@ int main(int argc, char** argv)
 	TogButton hard(675, 150, 150, 70, "Сложно");
 	menuBut back(15, 525, 125, 60, "Назад");
 	 
-	PlayBut play(408, 353, 184, 76, "Играть");
-
+	PlayBut play(359, 353, 184, 76, "Играть");
 
 	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
+
+	hackBut hack(555, 353, 86, 76, "Чит");
+	widget.hBut = &hack;
 
 	play.callback(Game, nullptr);
 	back.callback(toGameMenu, &win);
@@ -797,6 +834,9 @@ int main(int argc, char** argv)
 	lScreen1->hide();
 	lScreen1->end();
 	screens.gl1 = lScreen1;
+
+	HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(101));
+	win.icon((char*)hIcon);
 
 	win.end();
 	win.show(argc, argv);
@@ -966,7 +1006,7 @@ void ButPressed(Fl_Widget* w, void* data)
 		if (GData.opened[GData.curX][GData.curY] == false)
 		{
 			moves++;
-			open(GData.curX, GData.curY);
+			open(GData.curX, GData.curY); 
 		}
 	}
 	else
@@ -1358,7 +1398,10 @@ void redraw()
 	{
 		for (short j = 0; j < levels[GData.level-1].cols; j++)
 		{
-			if (GData.field[i][j] == '*') BField[i][j]->label("*");
+			if (GData.isHackAct == 1)
+			{
+				if (GData.field[i][j] == '*') BField[i][j]->label("*");
+			}
 
 			if (GData.opened[i][j] == true)
 			{
@@ -1573,10 +1616,12 @@ void dock(Fl_Widget* w, void* data)
 	//сбросить переменные
 	moves = 0; loose = false;
 	GData.GTime = 0;
+	GData.isHackAct = 0;
 
 	//обновить окна
 	screens.gl1->hide();
 	screens.gw1->hide();
+	widget.hBut->reset_state();
 
 	l_widget.cur_t->redraw(); //таймер
 	l_widget.cur_m->label("Ходов: 0");
