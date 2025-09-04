@@ -109,9 +109,9 @@ struct screen
 //данные об уровне
 const GameLevel levels[] =
 {
-	{10, 10, 10, "легкий"},
-	{15, 15, 23, "средний"},
-	{20, 25, 50, "сложный"}
+	{10, 10, 15, "легкий"},
+	{15, 15, 35, "средний"},
+	{19, 36, 100, "сложный"}
 };
 
 GameData GData;
@@ -605,17 +605,19 @@ public:
 			{
 				if (box() != FL_DOWN_BOX && (label() == "" || label() == "*"))
 				{
-					if (color() == fl_rgb_color(97, 255, 94))
+					if (color() == fl_rgb_color(247, 132, 25))//цвет для смены
 					{
 						color(fl_rgb_color(233, 240, 234));
 					}
 					else if (flags_count() < levels[GData.level - 1].mines_count)
 					{
-						color(fl_rgb_color(97, 255, 94));
+						color(fl_rgb_color(247, 132, 25));
 					}
 					counts_redraw();
+					winOrFail();
+
 				}
-				winOrFail();
+				
 			}
 		}break;
 		}
@@ -662,7 +664,7 @@ int game_level = 0;
 
 //окошко с информацией(глоб. перемнные нужны потому, что они стираются при переходе между функциями)
 string GTf, GMf;
-string Mfound; string Mleft; string complT;
+string Mfound; string Mleft; string complT; string buf;
 
 ChangedT* foundB; ChangedT* leftB;
 ChangedT* complexity;
@@ -728,6 +730,8 @@ int main(int argc, char** argv)
 	BoxForBut Trules(1000, 272, 291, 32, "Ознакомиться с правилами игры");
 	BoxForBut Texit(300, 600, 291, 32, "Закрыть приложение");
 
+	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.3");
+	version.box(FL_NO_BOX);
 
 	start.callback(toGameSettings, &win);
 	exit.callback(exitf, nullptr);
@@ -745,9 +749,10 @@ int main(int argc, char** argv)
 	 
 	PlayBut play(359, 353, 184, 76, "Играть");
 
-	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКоличество мин: 10");
-	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКоличество мин: 23");
-	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 25х20\nКоличество мин: 50");
+	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКол-во мин: 15");
+	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКол-во мин: 35");
+	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 38х19\nКол-во мин:100");
+	BoxForBut Thack(300, 600, 400, 56, "Включает отображение мин до их открытия");
 
 	hackBut hack(555, 353, 86, 76, "Чит");
 	widget.hBut = &hack;
@@ -781,11 +786,11 @@ int main(int argc, char** argv)
 	l_widget.cur_m = cur_steps;
 
 	//группа легкой сложности (3)
-	Fl_Group* ez_g = new Fl_Group(0, 0, 1000, 600);
+	Fl_Group* es_g = new Fl_Group(0, 0, 1000, 600);
 
-	ez_g->end();
-	ez_g->hide();
-	menues.easy = ez_g;
+	es_g->end();
+	es_g->hide();
+	menues.easy = es_g;
 
 	//группа нормальной сложности (4)
 	Fl_Group* nor_g = new Fl_Group(0, 0, 1000, 600);
@@ -794,8 +799,15 @@ int main(int argc, char** argv)
 	nor_g->hide();
 	menues.normal = nor_g;
 
+	//группа сложной сложности (5)
+	Fl_Group* har_g = new Fl_Group(0, 0, 1000, 600);
+
+	har_g->end();
+	har_g->hide();
+	menues.hard = har_g;
+
 	//экран победы
-	Fl_Group* wScreen1 = new Fl_Group(10, 10, 580, 580);
+	Fl_Group* wScreen1 = new Fl_Group(10, 213, 990, 174);
 
 	Fl_Box bckgrW1(10, 213, 580, 174);
 	bckgrW1.color(fl_rgb_color(192, 192, 192));
@@ -814,21 +826,21 @@ int main(int argc, char** argv)
 	screens.gw1 = wScreen1;	
 
 	//экран поражения
-	Fl_Group* lScreen1 = new Fl_Group(10, 10, 580, 580);
+	Fl_Group* lScreen1 = new Fl_Group(10, 213, 990, 174);
 
-	Fl_Box bckgrL1(10, 213, 580, 174);
+	Fl_Box bckgrL1(10, 213, 570, 174);
 	bckgrL1.color(fl_rgb_color(192, 192, 192));
 	bckgrL1.box(FL_FLAT_BOX);
 
-	Fl_Box tgrL1(10, 220, 580, 159);
+	Fl_Box tgrL1(10, 220, 570, 159);
 	tgrL1.color(fl_rgb_color(169, 169, 169));
 	tgrL1.box(FL_FLAT_BOX);
 
-	Fl_Box tgrTextL1(30, 254, 539, 58, "Открыта мина");
+	Fl_Box tgrTextL1(30, 254, 535, 58, "Открыта мина");
 	tgrTextL1.labelcolor(fl_rgb_color(113, 0, 0));
 	tgrTextL1.labelsize(48);
 
-	Fl_Box tgrTextL2(30, 330, 539, 58, "Проигрыш");
+	Fl_Box tgrTextL2(30, 330, 535, 58, "Проигрыш");
 	tgrTextL2.labelsize(24);
 
 	lScreen1->hide();
@@ -880,6 +892,13 @@ void toGameMenu(Fl_Widget* w, void* data)
 	else if (menues.normal->visible())
 	{
 		menues.normal->hide();
+		menues.main->show();
+		//again(nullptr, nullptr);
+		choose_level(w, data);
+	}
+	else if (menues.hard->visible())
+	{
+		menues.hard->hide();
 		menues.main->show();
 		//again(nullptr, nullptr);
 		choose_level(w, data);
@@ -957,7 +976,7 @@ void Game(Fl_Widget* w, void* data)
 	self->icreasing = false;
 	self->reset_state();
 
-	if (game_level == 0 or game_level == 3)
+	if (game_level == 0)
 	{
 		menues.settings->show();
 		return;
@@ -976,7 +995,7 @@ void Game(Fl_Widget* w, void* data)
 	}
 	else if (game_level == 3)
 	{
-		menues.settings->show();
+		menues.hard->show();
 	}
 }
 
@@ -1048,7 +1067,7 @@ short flags_count()
 	{
 		for (int j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			if (BField[i][j]->color() == fl_rgb_color(97, 255, 94))
+			if (BField[i][j]->color() == fl_rgb_color(247, 132, 25))
 			{
 				count++;
 			}
@@ -1192,6 +1211,28 @@ void ShowSign(void* data)
 			Fl::add_timeout(0.005, ShowSign, data);
 		}
 	}
+	else if (strcmp(but->label(), "Чит") == 0)
+	{
+		Fl_Widget* box = but->parent()->child(8);
+		TogButton* tBut = (TogButton*)data;
+
+		if (tBut->inFocus and box->y() > 544)
+		{
+			box->resize(box->x(), box->y() - 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+		else if (!tBut->inFocus and box->y() < 600)
+		{
+			box->resize(box->x(), box->y() + 4, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+
+			Fl::add_timeout(0.005, ShowSign, data);
+		}
+		}
 }
 
 //функционал
@@ -1255,7 +1296,7 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
 
 	// Верхняя граница
 	fprintf(file, "   +");
-	for (int i = 0; i < cols * 3 - 1; i++)
+	for (int i = 0; i < cols * 3; i++)
 	{
 		fprintf(file, "-");
 	}
@@ -1274,7 +1315,7 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
 
 	// Нижняя граница
 	fprintf(file, "   +");
-	for (int i = 0; i < cols * 3 - 1; i++)
+	for (int i = 0; i < cols * 3; i++)
 	{
 		fprintf(file, "-");
 	}
@@ -1353,9 +1394,9 @@ void winOrFail()
 {
 	if (loose == true)
 	{
+		Fl::remove_timeout(timer);
 		screens.gl1->show();
 		showField();
-		Fl::remove_timeout(timer);
 		return;
 	}
 
@@ -1364,7 +1405,8 @@ void winOrFail()
 	{
 		for (int j = 0; j < levels[GData.level - 1].cols; j++)
 		{
-			if (BField[i][j]->color() == fl_rgb_color(97, 255, 94) and GData.field[i][j] == '*')
+			if (!GData.field)break;
+			if (BField[i][j]->color() == fl_rgb_color(247, 132, 25) and  GData.field[i][j] == '*')
 			{
 				count++;
 			}
@@ -1489,16 +1531,18 @@ void drowField()
 	{
 		delete foundB;
 		delete leftB;
+
 		delete complexity;
+
 		delete l_widget.cur_m;
 		delete l_widget.cur_t;
 	}
 
-	short x, y, sx, sy;
-	BField = new PGBut **[25];
+	short x, y, sx = NULL, sy = NULL, subx = NULL, suby = NULL;
+	BField = new PGBut **[30];
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
-		BField[i] = new PGBut * [20];
+		BField[i] = new PGBut * [levels[GData.level - 1].cols];
 	}
 	
 	Fl_Group* gr = nullptr;
@@ -1507,21 +1551,25 @@ void drowField()
 	{
 		gr = menues.easy;
 		sx = 58; sy = 58;
+		subx = 10; suby = 10;
 	}
 	else if (game_level == 2)
 	{
 		gr = menues.normal;
 		sx = 38.1; sy = 38.6;
+		subx = 10; suby = 10;
 	}
-	else if (game_level == 2)
+	else if (game_level == 3)
 	{
 		gr = menues.hard;
+		sx = sy = 27;
+		subx = 14; suby = 7;
 	}
 
-	y = 10;
+	y = suby;
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
-		x = 10;
+		x = subx;
 		for (short j = 0; j < levels[GData.level - 1].cols; j++)
 		{
 			BField[i][j] = new PGBut(x, y, sx, sy, "");
@@ -1534,14 +1582,23 @@ void drowField()
 		y += sy;
 	}
 
-	//menues.easy->remove(screens.gl1); 
-	//menues.easy->remove(screens.gw1); 
+	if (game_level == 1 || game_level == 3) x = 580, y = 549;
+	else x = 570, y = 539;
+
+	screens.gl1->child(0)->resize(10, 213, x, 174);
+	screens.gl1->child(1)->resize(10, 220, x, 159);
+	screens.gl1->child(2)->resize(30, 254, y, 58);
+	screens.gl1->child(3)->resize(30, 330, y, 58);
+
+	screens.gw1->child(0)->resize(10, 213, x, 174);
+	screens.gw1->child(1)->resize(10, 220, x, 159);
+	screens.gw1->child(2)->resize(30, 254, y, 58);
 
 	if (game_level == 1)
 	{
 
 		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
-		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 10");
+		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 15");
 
 		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
 		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
@@ -1570,7 +1627,7 @@ void drowField()
 	else if (game_level == 2)
 	{
 		foundB = new ChangedT(635, 190, 211, 29, "Мин найдено: 0");
-		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 23");
+		leftB = new ChangedT(635, 219, 211, 29, "Мин осталось: 35");
 		
 		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
 		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
@@ -1595,6 +1652,50 @@ void drowField()
 
 		menues.normal->add(screens.gl1);
 		menues.normal->add(screens.gw1);
+	}
+	else if (game_level == 3)
+	{
+		foundB = new ChangedT(157, 548, 169, 26, "Мин найдено: 0");
+		foundB->labelsize(20);
+		leftB = new ChangedT(658, 548, 178, 26, "Мин осталось: 100");
+		leftB->labelsize(20);
+
+		l_widget.again = new menuBut(864, 531, 127, 57, "Заново");
+		l_widget.again->labelsize(20);
+
+		l_widget.toMenu = new menuBut(9, 531, 127, 57, "В меню");
+		l_widget.toMenu->labelsize(20);
+
+		l_widget.cur_t = new ChangedT(361, 548, 159, 26, "Время: 0");
+		l_widget.cur_t->labelsize(20);
+
+		l_widget.cur_m = new ChangedT(505, 548, 123, 26, "Ходов: 0");
+		l_widget.cur_m->labelsize(20);
+
+		l_widget.UnG1 = new BoxForBut(149, 533, 702, 53);
+
+		screens.gl1->child(0)->resize(10, 213, 980, 174); 
+		screens.gl1->child(1)->resize(10, 220, 975, 159);
+		screens.gl1->child(2)->resize(30, 254, 975, 58);
+		screens.gl1->child(3)->resize(30, 330, 980, 58);
+
+		screens.gw1->child(0)->resize(10, 213, 980, 174);
+		screens.gw1->child(1)->resize(10, 220, 975, 159);
+		screens.gw1->child(2)->resize(30, 254, 975, 58);
+
+		menues.hard->add(l_widget.UnG1);
+		menues.hard->add(l_widget.cur_t);
+		menues.hard->add(l_widget.cur_m);
+		menues.hard->add(l_widget.again);
+		menues.hard->add(l_widget.toMenu);
+
+		menues.hard->add(foundB);
+		menues.hard->add(leftB);
+
+		complexity = new ChangedT(670, 141, 240, 29, "Сложность: сложно");
+
+		menues.hard->add(screens.gl1);
+		menues.hard->add(screens.gw1);
 	}
 	l_widget.again->callback(dock, GData.win);
 	l_widget.toMenu->callback(dock, nullptr);
@@ -1633,9 +1734,6 @@ void dock(Fl_Widget* w, void* data)
 	Fl::remove_timeout(timer);
 	GTf = "Время: 0";
 
-	
-
-
 	//В другие функции
 	if (w == nullptr) return;
 	if (strcmp(w->label(), "Заново") == 0)
@@ -1645,7 +1743,7 @@ void dock(Fl_Widget* w, void* data)
 	else if ((strcmp(w->label(), "В меню") == 0))
 	{
 		//перед выходом в меню, удалить старое игровое поле
-		if (game_level != 0 and game_level != 3)
+		if (game_level != 0)
 		{
 			//удалить, если уже объявлено
 			if (BField)
