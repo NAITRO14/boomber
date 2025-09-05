@@ -53,6 +53,7 @@ void Game(Fl_Widget* w, void* data);
 void ButPressed(Fl_Widget* w, void* data);
 void again(Fl_Widget* w, void* data);
 void ShowSign(void* data);
+void alertf(void* data);
 void drowField();
 void showField();
 void redraw();
@@ -78,9 +79,7 @@ struct GameData
 	short curY;
 	short zCount;
 	short GTime;
-	bool isHackAct;
-
-	
+	bool isHackAct;	
 };
 
 //хранилище меню
@@ -468,6 +467,12 @@ public:
 	{
 		switch (event)
 		{
+		case FL_PUSH:
+		{
+			alertf(this);
+
+			return MyButton::handle(event);
+		}break;
 		case FL_ENTER:
 		{
 			startAnim(true);
@@ -645,6 +650,8 @@ struct levels_w
 
 	ChangedT* cur_t;
 	ChangedT* cur_m;
+
+	BoxForBut* alert;
 };
 
 struct widgets
@@ -753,6 +760,12 @@ int main(int argc, char** argv)
 	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКол-во мин: 35");
 	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 38х19\nКол-во мин:100");
 	BoxForBut Thack(300, 600, 400, 56, "Включает отображение мин до их открытия");
+
+	BoxForBut alert(200, -88, 600, 85, "Пожалуйста, выбирете сложность!");
+	alert.box(FL_GLEAM_THIN_DOWN_BOX);
+	alert.labelsize(36);
+	alert.color(fl_rgb_color(237, 55, 55));
+	l_widget.alert = &alert;
 
 	hackBut hack(555, 353, 86, 76, "Чит");
 	widget.hBut = &hack;
@@ -1232,7 +1245,46 @@ void ShowSign(void* data)
 
 			Fl::add_timeout(0.005, ShowSign, data);
 		}
+	}
+	
+
+}
+
+void alertf(void* data)
+{
+	Fl_Widget* but = (Fl_Widget*)data;
+	static bool omit = true;
+
+	if (strcmp(but->label(), "Играть") == 0)
+	{
+		Fl_Widget* box = but->parent()->child(9);
+		PlayBut* tBut = (PlayBut*)data;
+
+		if (box->y() < -3 and omit and game_level == 0)
+		{
+			box->resize(box->x(), box->y() + 5, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+			if (box->y() == -3)
+			{
+				omit = false;
+				Fl::add_timeout(1, alertf, data);
+				return;
+			}
+			
+
+			Fl::add_timeout(0.005, alertf, data);
 		}
+		else if (box->y() > -88)
+		{
+			box->resize(box->x(), box->y() - 5, box->w(), box->h());
+			box->redraw();
+			box->parent()->parent()->redraw();
+			if (box->y() == -88) { omit = true; return; }
+
+			Fl::add_timeout(0.005, alertf, data);
+		}
+	}
 }
 
 //функционал
