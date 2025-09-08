@@ -15,6 +15,8 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
+#include <FL/Fl_Image.H>
+#include <FL/Fl_PNG_Image.H>
 
 //звуки
 #include <SDL2/SDL.h>
@@ -760,21 +762,15 @@ int main(int argc, char** argv)
 
 	BoxForBut nigger(50, 80, 900, 600);
 	BoxForBut nigger2(350, 15, 295, 55, "Правила");
-	TogButton backk(75, 520, 140, 70, "Выход");
-	TogButton next(785, 520, 140, 70, "->");
-
-	backk.callback();
-	backk.box(FL_FLAT_BOX);
-	backk.color(fl_rgb_color(170, 170, 170));
-	next.callback();
-	next.box(FL_FLAT_BOX);
-	next.color(fl_rgb_color(170, 170, 170));
-
+	menuBut backFromRules(75, 520, 150, 75, "Назад");
+	menuBut next(785, 520, 150, 75, "->");
 
 	nigger.color(fl_rgb_color(192, 192, 192));
 	nigger2.align(FL_ALIGN_CENTER);
 	nigger2.labelsize(40);
 	nigger2.color(fl_rgb_color(180, 180, 180));
+
+	backFromRules.callback(toGameRule, &win);
 
 	rules_settings->end();
 	rules_settings->hide();
@@ -958,8 +954,20 @@ void toGameRule(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 
-	menues.main->hide();
-	menues.rules->show();
+	menuBut* b = (menuBut*)w;
+	b->reset_state();
+
+	if (menues.main->visible())
+	{
+		menues.main->hide();
+		menues.rules->show();
+	}
+	else
+	{
+		menues.rules->hide();
+		menues.main->show();
+	}
+	
 }
 
 void exitf(Fl_Widget* w, void* data)
