@@ -53,6 +53,7 @@ void Game(Fl_Widget* w, void* data);
 void ButPressed(Fl_Widget* w, void* data);
 void again(Fl_Widget* w, void* data);
 void ShowSign(void* data);
+void toGameRule(Fl_Widget* w, void* data);
 void alertf(void* data);
 void drowField();
 void showField();
@@ -91,6 +92,7 @@ struct menu
 	Fl_Group* easy;
 	Fl_Group* normal;
 	Fl_Group* hard;
+	Fl_Group* rules;
 };
 
 //хранилище экранов победы/поражения
@@ -740,11 +742,45 @@ int main(int argc, char** argv)
 	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.3");
 	version.box(FL_NO_BOX);
 
+	rules.callback(toGameRule, &win);
 	start.callback(toGameSettings, &win);
 	exit.callback(exitf, nullptr);
 	mainMenu->hide();
 	mainMenu->end();
 	menues.main = mainMenu;
+
+	//меню правил (n)
+	Fl_Group* rules_settings = new Fl_Group(0, 0, 1000, 600);
+	rules_settings->begin();
+
+
+	Fl_Box* background = new Fl_Box(0, 0, 1000, 600);
+	background->color(fl_rgb_color(160, 160, 160));  // Цвет фона
+	background->box(FL_FLAT_BOX);  // Стиль без рамки
+
+	BoxForBut nigger(50, 80, 900, 600);
+	BoxForBut nigger2(350, 15, 295, 55, "Правила");
+	TogButton backk(75, 520, 140, 70, "Выход");
+	TogButton next(785, 520, 140, 70, "->");
+
+	backk.callback();
+	backk.box(FL_FLAT_BOX);
+	backk.color(fl_rgb_color(170, 170, 170));
+	next.callback();
+	next.box(FL_FLAT_BOX);
+	next.color(fl_rgb_color(170, 170, 170));
+
+
+	nigger.color(fl_rgb_color(192, 192, 192));
+	nigger2.align(FL_ALIGN_CENTER);
+	nigger2.labelsize(40);
+	nigger2.color(fl_rgb_color(180, 180, 180));
+
+	rules_settings->end();
+	rules_settings->hide();
+
+	menues.rules = rules_settings;
+
 
 	//Группа настройки игры(2)
 	Fl_Group* game_settings = new Fl_Group(0, 0, 1000, 600);
@@ -916,6 +952,14 @@ void toGameMenu(Fl_Widget* w, void* data)
 		//again(nullptr, nullptr);
 		choose_level(w, data);
 	}
+}
+
+void toGameRule(Fl_Widget* w, void* data)
+{
+	Fl_Double_Window* win = (Fl_Double_Window*)data;
+
+	menues.main->hide();
+	menues.rules->show();
 }
 
 void exitf(Fl_Widget* w, void* data)
