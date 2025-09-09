@@ -138,6 +138,7 @@ public:
 		color(fl_rgb_color(169, 169, 169));
 		selection_color(fl_rgb_color(143, 175, 255));
 		clear_visible_focus();
+		labelfont(FL_HELVETICA);
 		labelsize(24);
 
 		click = Mix_LoadWAV("sounds/selection.wav");
@@ -231,6 +232,7 @@ public:
 		color(fl_rgb_color(169, 169, 169));
 		selection_color(fl_rgb_color(100, 100, 105));
 		clear_visible_focus();
+		labelfont(FL_HELVETICA);
 		labelsize(20);
 	}
 
@@ -762,8 +764,8 @@ int main(int argc, char** argv)
 
 	BoxForBut nigger(50, 80, 900, 600);
 	BoxForBut nigger2(350, 15, 295, 55, "Правила");
-	menuBut backFromRules(75, 520, 150, 75, "Назад");
-	menuBut next(785, 520, 150, 75, "->");
+	menuBut backFromRules(75, 520, 150, 70, "Назад");
+	menuBut next(785, 520, 150, 70, "->");
 
 	nigger.color(fl_rgb_color(192, 192, 192));
 	nigger2.align(FL_ALIGN_CENTER);
@@ -1642,7 +1644,7 @@ void drowField()
 		delete l_widget.cur_t;
 	}
 
-	short x, y, sx = NULL, sy = NULL, subx = NULL, suby = NULL;
+	short x, y, sx, sy, subx, suby;
 	BField = new PGBut **[30];
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
 	{
