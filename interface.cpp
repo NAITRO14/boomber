@@ -275,7 +275,7 @@ public:
 	}
 	void rsOfBlock()//вернуть детей на место после перехода
 	{
-		if (strcmp(label(), "Начать игру") == 0)
+		if (strcmp(label(), "Начать игру") == 0 or strcmp(label(), "Правила") == 0)
 		{
 			parent()->child(3)->resize(300, -32, 291, 32);
 			parent()->child(4)->resize(1000, 272, 291, 32);
@@ -1063,21 +1063,18 @@ void toGameMenu(Fl_Widget* w, void* data)
 	{
 		menues.easy->hide();
 		menues.main->show();
-		//again(nullptr, nullptr);
 		choose_level(w, data);
 	}
 	else if (menues.normal->visible())
 	{
 		menues.normal->hide();
 		menues.main->show();
-		//again(nullptr, nullptr);
 		choose_level(w, data);
 	}
 	else if (menues.hard->visible())
 	{
 		menues.hard->hide();
 		menues.main->show();
-		//again(nullptr, nullptr);
 		choose_level(w, data);
 	}
 }
