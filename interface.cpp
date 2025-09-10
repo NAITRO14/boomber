@@ -753,6 +753,8 @@ int main(int argc, char** argv)
 	mainMenu->end();
 	menues.main = mainMenu;
 
+
+
 	//меню правил (n)
 	Fl_Group* rules_g = new Fl_Group(0, 0, 1000, 600);
 	rules_g->begin();
@@ -764,6 +766,12 @@ int main(int argc, char** argv)
 	cout << img2->w() << " " << img2->h() << endl;
 	Fl_PNG_Image* img3 = new Fl_PNG_Image("images/marked_mines_img.png");
 	cout << img3->w() << " " << img3->h() << endl;
+	Fl_PNG_Image* img4 = new Fl_PNG_Image("images/marked_mines2_img.png");
+	cout << img4->w() << " " << img4->h() << endl;
+	Fl_PNG_Image* img5 = new Fl_PNG_Image("images/mines_found_img.png");
+	cout << img5->w() << " " << img5->h() << endl;
+	Fl_PNG_Image* img6 = new Fl_PNG_Image("images/mines_left_png.png");
+	cout << img6->w() << " " << img6->h() << endl;
 
 	Fl_Box* background = new Fl_Box(0, 0, 1000, 600);
 	background->color(fl_rgb_color(160, 160, 160));  // Цвет фона
@@ -773,21 +781,22 @@ int main(int argc, char** argv)
 	BoxForBut nigger2(350, 15, 295, 55, "Правила");
 	
 
-	//---------------------------------- |9|
+	//---------------------------------- |3|
 	//вкладка правил 1
 
 	Fl_Group* r1 = new Fl_Group(0, 0, 1000, 600);
 
+	//бекграунд картинок
 	Fl_Box b1(734, 93, 154, 99);
-	b1.color(FL_GREEN);
+	b1.color(fl_rgb_color(7, 89, 0));
 	b1.box(FL_FLAT_BOX);
 
 	Fl_Box b2(741, 217, 139, 134);
-	b2.color(FL_RED);
+	b2.color(fl_rgb_color(143, 1, 1));
 	b2.box(FL_FLAT_BOX);
 
 	Fl_Box b3(723, 369, 176, 200);
-	b3.color(FL_BLUE);
+	b3.color(fl_rgb_color(0, 14, 140));
 	b3.box(FL_FLAT_BOX);
 
 	//1
@@ -817,10 +826,41 @@ int main(int argc, char** argv)
 	r1->end();
 	r1->show();
 
-	//----------------------------------|10|
+	//----------------------------------|4|
 	//вкладка правил 2
 
 	Fl_Group* r2 = new Fl_Group(0, 0, 1000, 600);
+
+	Fl_Box rt4(94, 110, 815, 119, "После каждой игры, вы можете получить очки, которые влияют на положение\nв таблице лидеров, но, чем дольше идет игра, тем меньше очков вы получите за\nигру. Зарабатывая больше очков, вы продвигаетесь выше по таблице.\nОбратите внимание, что за игры, где был включен \"Чит\", очки не насчитываются.\nТаблица лидеров существует в пределах одного приложения(не мультиплеер).");
+	rt4.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+	rt4.labelsize(20);
+
+	Fl_Box rt5(94, 249, 815, 131, "Когда вы зайдете в игру, вы увидите показатели \"мин осталось\" и \"мин найдено\".\nЭти показатели изменяются, когда вы помечаете клетку флажком(правая кнопка\nмыши), но учтите, что этоти индикаторы отображают только количество\nпомеченных флажком клеток. Эти цифры не обозначают реально найденое количество мин.");
+	rt5.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+	rt5.labelsize(20);
+
+	//бекграунд картинок
+	Fl_Box b4(223, 392, 186, 72);
+	b4.color(fl_rgb_color(143, 1, 1));
+	b4.box(FL_FLAT_BOX);
+
+	Fl_Box b5(432, 374, 124, 124);
+	b5.color(fl_rgb_color(7, 89, 0));
+	b5.box(FL_FLAT_BOX);
+
+	Fl_Box b6(579, 395, 209, 67);
+	b6.color(fl_rgb_color(0, 14, 140));
+	b6.box(FL_FLAT_BOX);
+
+	Fl_Box* im4 = new Fl_Box(435, 377, img4->w(), img4->h());
+	im4->image(img4);
+
+	Fl_Box* im5 = new Fl_Box(226, 395, img5->w(), img5->h());
+	im5->image(img5);
+
+	Fl_Box* im6 = new Fl_Box(582, 398, img6->w(), img6->h());
+	im6->image(img6);
+	
 
 	r2->end();
 	r2->hide();
@@ -830,7 +870,7 @@ int main(int argc, char** argv)
 	nigger2.labelsize(40);
 	nigger2.color(fl_rgb_color(180, 180, 180));
 
-	menuBut backFromRules(75, 520, 150, 70, "Назад");
+	menuBut backFromRules(75, 520, 150, 70, "В меню");
 	menuBut next(909, 520, 30, 70, ">");
 	next.labelfont(FL_COURIER_BOLD);
 
