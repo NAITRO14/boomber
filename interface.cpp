@@ -434,7 +434,7 @@ public:
 		:Fl_Box(X, Y, W, H, L)
 	{
 		color(fl_rgb_color(169, 169, 169));
-		box(FL_FLAT_BOX);
+		box(FL_FREE_BOXTYPE);
 		labelsize(18);
 	}
 };
@@ -790,12 +790,13 @@ int main(int argc, char** argv)
 	 
 	PlayBut play(359, 353, 184, 76, "Играть");
 
-	BoxForBut Teasy(166, -56, 166, 56, "Размер поля: 10х10\nКол-во мин: 15");
-	BoxForBut Tnormal(416, -56, 166, 56, "Размер поля: 15х15\nКол-во мин: 35");
-	BoxForBut Thard(666, -56, 166, 56, "Размер поля: 38х19\nКол-во мин:100");
+	BoxForBut Teasy(164, -56, 170, 56, "Размер поля: 10х10\nКол-во мин: 15");
+	BoxForBut Tnormal(414, -56, 170, 56, "Размер поля: 15х15\nКол-во мин: 35");
+	BoxForBut Thard(664, -56, 170, 56, "Размер поля: 38х19\nКол-во мин:100");
 	BoxForBut Thack(300, 600, 400, 56, "Включает отображение мин до их открытия");
 
 	BoxForBut alert(200, -88, 600, 85, "Пожалуйста, выбирете сложность!");
+
 	alert.box(FL_GLEAM_THIN_DOWN_BOX);
 	alert.labelsize(36);
 	alert.color(fl_rgb_color(237, 55, 55));
@@ -1215,7 +1216,7 @@ void ShowSign(void* data)
 		Fl_Widget* box = but->parent()->child(5);
 		TogButton* tBut = (TogButton*)data;
 
-		if (tBut->inFocus and box->y() < 0)
+		if (tBut->inFocus and box->y() < -4)
 		{
 			box->resize(box->x(), box->y() + 4, box->w(), box->h());
 			box->redraw();
@@ -1238,7 +1239,7 @@ void ShowSign(void* data)
 		Fl_Widget* box = but->parent()->child(6);
 		TogButton* tBut = (TogButton*)data;
 
-		if (tBut->inFocus and box->y() < 0)
+		if (tBut->inFocus and box->y() < -4)
 		{
 			box->resize(box->x(), box->y() + 4, box->w(), box->h());
 			box->redraw();
@@ -1261,7 +1262,7 @@ void ShowSign(void* data)
 		Fl_Widget* box = but->parent()->child(7);
 		TogButton* tBut = (TogButton*)data;
 
-		if (tBut->inFocus and box->y() < 0)
+		if (tBut->inFocus and box->y() < -4)
 		{
 			box->resize(box->x(), box->y() + 4, box->w(), box->h());
 			box->redraw();
@@ -1283,7 +1284,7 @@ void ShowSign(void* data)
 		Fl_Widget* box = but->parent()->child(8);
 		TogButton* tBut = (TogButton*)data;
 
-		if (tBut->inFocus and box->y() > 544)
+		if (tBut->inFocus and box->y() > 548)
 		{
 			box->resize(box->x(), box->y() - 4, box->w(), box->h());
 			box->redraw();
