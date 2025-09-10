@@ -15,7 +15,6 @@
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
-#include <FL/Fl_Image.H>
 #include <FL/Fl_PNG_Image.H>
 
 //звуки
@@ -718,7 +717,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	HideConsole();
+	ShowConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
 	GData.win = &win; GData.GTime = 0;
@@ -757,15 +756,61 @@ int main(int argc, char** argv)
 	Fl_Group* rules_settings = new Fl_Group(0, 0, 1000, 600);
 	rules_settings->begin();
 
+	//подключение картинок
+	Fl_PNG_Image* img1 = new Fl_PNG_Image("images/on_click_img.png");
+	cout << img1->w() << " " << img1->h() << endl;
+	Fl_PNG_Image* img2 = new Fl_PNG_Image("images/nums_meaning_img.png");
+	cout << img2->w() << " " << img2->h() << endl;
+	Fl_PNG_Image* img3 = new Fl_PNG_Image("images/marked_mines_img.png");
+	cout << img3->w() << " " << img3->h() << endl;
 
 	Fl_Box* background = new Fl_Box(0, 0, 1000, 600);
 	background->color(fl_rgb_color(160, 160, 160));  // Цвет фона
 	background->box(FL_FLAT_BOX);  // Стиль без рамки
 
-	BoxForBut nigger(50, 80, 900, 600);
+	BoxForBut nigger(50, 80, 900, 525);
 	BoxForBut nigger2(350, 15, 295, 55, "Правила");
 	menuBut backFromRules(75, 520, 150, 70, "Назад");
-	menuBut next(785, 520, 150, 70, "->");
+	menuBut next(909, 520, 30, 70, ">");
+
+	Fl_Box b1(734, 93, 154, 99);
+	b1.color(FL_GREEN);
+	b1.box(FL_FLAT_BOX);
+
+	Fl_Box b2(741, 217, 139, 134);
+	b2.color(FL_RED);
+	b2.box(FL_FLAT_BOX);
+
+	Fl_Box b3(723, 369, 176, 200);
+	b3.color(FL_BLUE);
+	b3.box(FL_FLAT_BOX);
+
+	//1
+	Fl_Box rt1(66, 100, 605, 95, "После выбора сложности и перехода в игру перед вами\nоткрывается поле, состоящее из \"клеточек\". Чтобы начать игру,\nнужно нажать (левой кнопкой мыши) в любое место на\nполе — это безопасно, мины в первой клетке быть не может.");
+	rt1.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+	rt1.labelsize(20);
+
+	Fl_Box* im1 = new Fl_Box(737, 96, img1->w(), img1->h());
+	im1->image(img1);
+
+	//2
+	Fl_Box rt2(66, 257, 633, 71, "Теперь у вас открылось несколько \"клеточек\", и на некоторых\nиз них есть цифры. Эти цифры означают, сколько мин\nнаходится в соседних клетках.");
+	rt2.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+	rt2.labelsize(20);
+
+	Fl_Box* im2 = new Fl_Box(744, 220, img2->w(), img2->h());
+	im2->image(img2);
+
+	//3
+	Fl_Box rt3(66, 384, 604, 71, "Суть игры состоит в том, чтобы пометить все мины (правой\nкнопкой мыши), когда вы пометите их, игра закончится, и\nвам будут начислены очки за игру.");
+	rt3.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
+	rt3.labelsize(20);
+
+	Fl_Box* im3 = new Fl_Box(726, 372, img3->w(), img3->h());
+	im3->image(img3);
+
+
+
 
 	nigger.color(fl_rgb_color(192, 192, 192));
 	nigger2.align(FL_ALIGN_CENTER);
