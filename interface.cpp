@@ -1641,6 +1641,7 @@ void winOrFail()
 	{
 		for (int j = 0; j < levels[GData.level - 1].cols; j++)
 		{
+			if (!GData.field)return;
 			if (!GData.field[i][j])return;
 			if (BField[i][j]->color() == fl_rgb_color(247, 132, 25) and  GData.field[i][j] == '*')
 			{
