@@ -46,6 +46,7 @@ void HideConsole() {
 	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 }
 
+void rule_M_switch(Fl_Widget* w, void* data);
 void toGameMenu(Fl_Widget* w, void* data);
 void exitf(Fl_Widget* w, void* data);
 void toGameSettings(Fl_Widget* w, void* data);
@@ -742,7 +743,7 @@ int main(int argc, char** argv)
 	BoxForBut Trules(1000, 272, 291, 32, "Ознакомиться с правилами игры");
 	BoxForBut Texit(300, 600, 291, 32, "Закрыть приложение");
 
-	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.3");
+	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.5");
 	version.box(FL_NO_BOX);
 
 	rules.callback(toGameRule, &win);
@@ -753,8 +754,8 @@ int main(int argc, char** argv)
 	menues.main = mainMenu;
 
 	//меню правил (n)
-	Fl_Group* rules_settings = new Fl_Group(0, 0, 1000, 600);
-	rules_settings->begin();
+	Fl_Group* rules_g = new Fl_Group(0, 0, 1000, 600);
+	rules_g->begin();
 
 	//подключение картинок
 	Fl_PNG_Image* img1 = new Fl_PNG_Image("images/on_click_img.png");
@@ -770,8 +771,12 @@ int main(int argc, char** argv)
 
 	BoxForBut nigger(50, 80, 900, 525);
 	BoxForBut nigger2(350, 15, 295, 55, "Правила");
-	menuBut backFromRules(75, 520, 150, 70, "Назад");
-	menuBut next(909, 520, 30, 70, ">");
+	
+
+	//---------------------------------- |9|
+	//вкладка правил 1
+
+	Fl_Group* r1 = new Fl_Group(0, 0, 1000, 600);
 
 	Fl_Box b1(734, 93, 154, 99);
 	b1.color(FL_GREEN);
@@ -809,20 +814,36 @@ int main(int argc, char** argv)
 	Fl_Box* im3 = new Fl_Box(726, 372, img3->w(), img3->h());
 	im3->image(img3);
 
+	r1->end();
+	r1->show();
 
+	//----------------------------------|10|
+	//вкладка правил 2
 
+	Fl_Group* r2 = new Fl_Group(0, 0, 1000, 600);
+
+	r2->end();
+	r2->hide();
 
 	nigger.color(fl_rgb_color(192, 192, 192));
 	nigger2.align(FL_ALIGN_CENTER);
 	nigger2.labelsize(40);
 	nigger2.color(fl_rgb_color(180, 180, 180));
 
+	menuBut backFromRules(75, 520, 150, 70, "Назад");
+	menuBut next(909, 520, 30, 70, ">");
+	next.labelfont(FL_COURIER_BOLD);
+
+	cout << "back: " << rules_g->find(backFromRules) << endl;
+	cout<< "next: " <<  rules_g->find(next) << endl;
+
 	backFromRules.callback(toGameRule, &win);
+	next.callback(rule_M_switch, rules_g);
 
-	rules_settings->end();
-	rules_settings->hide();
+	rules_g->end();
+	rules_g->hide();
 
-	menues.rules = rules_settings;
+	menues.rules = rules_g;
 
 
 	//Группа настройки игры(2)
@@ -953,6 +974,24 @@ int main(int argc, char** argv)
 	SDL_Quit();
 
 	return ret;
+}
+
+void rule_M_switch(Fl_Widget* w, void* data)
+{
+	Fl_Group* gr = (Fl_Group*)data;
+
+	if (gr->child(3)->visible())
+	{
+		gr->child(3)->hide();
+		gr->child(4)->show();
+		gr->child(6)->label("<");
+	}
+	else
+	{
+		gr->child(3)->show();
+		gr->child(4)->hide();
+		gr->child(6)->label(">");
+	}
 }
 
 void toGameMenu(Fl_Widget* w, void* data)
