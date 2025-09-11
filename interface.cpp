@@ -46,6 +46,7 @@ void HideConsole() {
 	::ShowWindow(::GetConsoleWindow(), SW_HIDE);
 }
 
+void hide_wOrL_table(Fl_Widget* w, void* data);
 void rule_M_switch(Fl_Widget* w, void* data);
 void toGameMenu(Fl_Widget* w, void* data);
 void exitf(Fl_Widget* w, void* data);
@@ -668,6 +669,7 @@ struct levels_w
 
 	menuBut* toMenu;
 	menuBut* again;
+	menuBut* ShowF;
 
 	ChangedT* cur_t;
 	ChangedT* cur_m;
@@ -937,6 +939,9 @@ int main(int argc, char** argv)
 
 	menuBut* leaveLvl = nullptr;
 	l_widget.toMenu = leaveLvl;
+
+	menuBut* ShowF = nullptr;
+	l_widget.ShowF = ShowF;
 
 	ChangedT* cur_time = nullptr;
 	l_widget.cur_t = cur_time;
@@ -1666,6 +1671,7 @@ void showField()
 		}
 	}
 	redraw();
+	l_widget.ShowF->show();
 }
 
 //тут подключаются читы
@@ -1837,8 +1843,12 @@ void drowField()
 
 		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
 		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
+		l_widget.ShowF = new menuBut(212, 400, 175, 75, "Показать поле");
+		l_widget.ShowF->hide();
+
 		l_widget.cur_t = new ChangedT(650, 37, 175, 60, "Время: 0");
 		l_widget.cur_m = new ChangedT(830, 37, 175, 60, "Ходов: 0");
+
 		l_widget.UnG1 = new BoxForBut(620, 37, 350, 60);
 		l_widget.UnG2 = new BoxForBut(620, 131, 350, 246);
 
@@ -1848,6 +1858,7 @@ void drowField()
 		menues.easy->add(l_widget.toMenu);
 		menues.easy->add(l_widget.cur_t);
 		menues.easy->add(l_widget.cur_m);
+		menues.easy->add(l_widget.ShowF);
 
 		menues.easy->add(foundB);
 		menues.easy->add(leftB);
@@ -1866,8 +1877,12 @@ void drowField()
 		
 		l_widget.again = new menuBut(814, 510, 169, 63, "Заново");
 		l_widget.toMenu = new menuBut(606, 510, 169, 63, "В меню");
+		l_widget.ShowF = new menuBut(212, 400, 175, 75, "Показать поле");
+		l_widget.ShowF->hide();
+
 		l_widget.cur_t = new ChangedT(650, 37, 175, 60, "Время: 0");
 		l_widget.cur_m = new ChangedT(830, 37, 175, 60, "Ходов: 0");
+
 		l_widget.UnG1 = new BoxForBut(620, 37, 350, 60);
 		l_widget.UnG2 = new BoxForBut(620, 131, 350, 246);
 
@@ -1877,6 +1892,7 @@ void drowField()
 		menues.normal->add(l_widget.cur_m);
 		menues.normal->add(l_widget.again);
 		menues.normal->add(l_widget.toMenu);
+		menues.normal->add(l_widget.ShowF);
 
 		menues.normal->add(foundB);
 		menues.normal->add(leftB);
@@ -1901,6 +1917,9 @@ void drowField()
 		l_widget.toMenu = new menuBut(9, 531, 127, 57, "В меню");
 		l_widget.toMenu->labelsize(20);
 
+		l_widget.ShowF = new menuBut(412, 367, 175, 75, "Показать поле");
+		l_widget.ShowF->hide();
+
 		l_widget.cur_t = new ChangedT(361, 548, 159, 26, "Время: 0");
 		l_widget.cur_t->labelsize(20);
 
@@ -1923,6 +1942,7 @@ void drowField()
 		menues.hard->add(l_widget.cur_m);
 		menues.hard->add(l_widget.again);
 		menues.hard->add(l_widget.toMenu);
+		menues.hard->add(l_widget.ShowF);
 
 		menues.hard->add(foundB);
 		menues.hard->add(leftB);
@@ -1932,8 +1952,26 @@ void drowField()
 		menues.hard->add(screens.gl1);
 		menues.hard->add(screens.gw1);
 	}
+	l_widget.ShowF->color(fl_rgb_color(184, 101, 42));
+	l_widget.ShowF->callback(hide_wOrL_table, nullptr);
 	l_widget.again->callback(dock, GData.win);
 	l_widget.toMenu->callback(dock, nullptr);
+}
+
+void hide_wOrL_table(Fl_Widget*w, void* data)
+{
+	menuBut* self = (menuBut*)w;
+	self->reset_state();
+
+	if (loose)
+	{
+		screens.gl1->hide();
+	}
+	else
+	{
+		screens.gw1->hide();
+	}
+	l_widget.ShowF->hide();
 }
 
 void timer(void* data)
@@ -1954,11 +1992,15 @@ void dock(Fl_Widget* w, void* data)
 	GData.GTime = 0;
 	GData.isHackAct = 0;
 
+	//обновить виджеты
+	widget.hBut->reset_state();
+	l_widget.ShowF->hide();
+	l_widget.ShowF->color(fl_rgb_color(184, 101, 42));
+
 	//обновить окна
 	screens.gl1->hide();
 	screens.gw1->hide();
-	widget.hBut->reset_state();
-
+	
 	l_widget.cur_t->redraw(); //таймер
 	l_widget.cur_m->label("Ходов: 0");
 	foundB->label("Мин найдено: 0");
