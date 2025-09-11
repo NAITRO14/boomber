@@ -903,7 +903,7 @@ int main(int argc, char** argv)
 
 	BoxForBut Teasy(164, -56, 170, 56, "Размер поля: 10х10\nКол-во мин: 15");
 	BoxForBut Tnormal(414, -56, 170, 56, "Размер поля: 15х15\nКол-во мин: 35");
-	BoxForBut Thard(664, -56, 170, 56, "Размер поля: 38х19\nКол-во мин:100");
+	BoxForBut Thard(664, -56, 170, 56, "Размер поля: 38х19\nКол-во мин: 100");
 	BoxForBut Thack(300, 600, 400, 56, "Включает отображение мин до их открытия");
 
 	BoxForBut alert(200, -88, 600, 85, "Пожалуйста, выбирете сложность!");
@@ -1623,7 +1623,7 @@ bool open(short i, short j)
 	return 1;
 }
 
-void winOrFail()
+void winOrFail() 
 {
 	if (loose == true)
 	{
@@ -1650,6 +1650,7 @@ void winOrFail()
 	if (count >= levels[GData.level - 1].mines_count)
 	{
 		screens.gw1->show();
+		showField();
 		Fl::remove_timeout(timer);
 	}
 }
@@ -1908,14 +1909,14 @@ void drowField()
 
 		l_widget.UnG1 = new BoxForBut(149, 533, 702, 53);
 
-		screens.gl1->child(0)->resize(10, 213, 980, 174); 
-		screens.gl1->child(1)->resize(10, 220, 975, 159);
-		screens.gl1->child(2)->resize(30, 254, 975, 58);
-		screens.gl1->child(3)->resize(30, 330, 980, 58);
+		screens.gl1->child(0)->resize(10, 163, 980, 174); 
+		screens.gl1->child(1)->resize(10, 170, 975, 159);
+		screens.gl1->child(2)->resize(30, 204, 975, 58);
+		screens.gl1->child(3)->resize(30, 280, 980, 58);
 
-		screens.gw1->child(0)->resize(10, 213, 980, 174);
-		screens.gw1->child(1)->resize(10, 220, 975, 159);
-		screens.gw1->child(2)->resize(30, 254, 975, 58);
+		screens.gw1->child(0)->resize(10, 163, 980, 174);
+		screens.gw1->child(1)->resize(10, 170, 975, 159);
+		screens.gw1->child(2)->resize(30, 204, 975, 58);
 
 		menues.hard->add(l_widget.UnG1);
 		menues.hard->add(l_widget.cur_t);
