@@ -272,7 +272,7 @@ public:
 		resize(Xold, Yold, Wold, Hold);
 		color(fl_rgb_color(169, 169, 169));
 		redraw();
-		if (parent()) { parent()->parent()->redraw(); }
+		if (parent()) { parent()->redraw(); }
 	}
 	void rsOfBlock()//вернуть детей на место после перехода
 	{
