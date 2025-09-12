@@ -16,6 +16,7 @@
 #include <FL/Fl_Button.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_PNG_Image.H>
+#include <FL/Fl_Input.H>
 
 //звуки
 #include <SDL2/SDL.h>
@@ -31,6 +32,7 @@ bool open(short i, short j);
 bool inbounds(int row, int col, int rows, int cols);
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col);
 void calculate_numbers(char** field, int rows, int cols);
+void toReg(Fl_Widget* w, void* data);
 void dock(Fl_Widget* w, void* data);
 void timer(void* data);
 void counts_redraw();
@@ -96,6 +98,7 @@ struct menu
 	Fl_Group* normal;
 	Fl_Group* hard;
 	Fl_Group* rules;
+	Fl_Group* reg;
 };
 
 //хранилище экранов победы/поражения
@@ -748,9 +751,82 @@ int main(int argc, char** argv)
 	//группа приветственного меню (0)
 	Fl_Group* helloWin = new Fl_Group(0, 0, 1000, 600);
 	menuBut begin(435.5, 250, 125, 60, "Начать");
-	begin.callback(toGameMenu, helloWin->parent());
+	begin.callback(toReg, helloWin->parent());
 	helloWin->end();
 	menues.hello = helloWin;
+
+	//группа входа
+	Fl_Group* Registrata = new Fl_Group(0, 0, 1000, 600);
+
+	Fl_Box  bg1(50, 50, 401, 482);
+	Fl_Box bg2(550, 50, 401, 482);
+	Fl_Button playAsG(590, 75, 324, 387, "Играть в режиме Гостя");
+	Fl_Box noScore(590, 462, 324, 37, "счет сохраняться не будет*");
+	Fl_Box loginT(100, 60, 291, 64, "Вход");
+	Fl_Box user_name(70, 165, 113, 37, "Никнейм:");
+
+	Fl_Input pole(70, 202, 344, 41); //Тут надо реализовать поле ввода
+
+	Fl_Box pass(70, 270, 113, 37, "Пароль:");
+
+	Fl_Input pole2(70, 307, 344, 41); // Тут тоже
+
+	Fl_Button loginB(70, 380, 344, 83, "Войти");
+	Fl_Box firstTime(63, 488, 203, 33, "Играете в первый раз?");
+	Fl_Button reg(266, 488, 163, 33, "Регистрация");
+
+
+	reg.color(fl_rgb_color(128, 128, 128));
+	reg.box(FL_FLAT_BOX);
+	reg.labelsize(16);
+
+	firstTime.color(fl_rgb_color(183, 183, 183));
+	firstTime.box(FL_FLAT_BOX);
+	firstTime.labelsize(16);
+
+	loginT.color(fl_rgb_color(169, 169, 169));
+	loginT.box(FL_FLAT_BOX);
+	loginT.labelsize(48);
+
+	pole2.color(fl_rgb_color(142, 142, 142));
+	pole2.box(FL_FLAT_BOX);
+
+	pass.color(fl_rgb_color(175, 175, 175));
+	pass.box(FL_FLAT_BOX);
+	pass.labelsize(18);
+
+	pole.color(fl_rgb_color(142, 142, 142));
+	pole.box(FL_FLAT_BOX);
+
+	user_name.color(fl_rgb_color(175, 175, 175));
+	user_name.box(FL_FLAT_BOX);
+	user_name.labelsize(18);
+
+	noScore.color(fl_rgb_color(128, 128, 128));
+	noScore.box(FL_FLAT_BOX);
+	noScore.labelsize(20);
+
+	loginB.color(fl_rgb_color(128, 128, 128));
+	loginB.box(FL_FLAT_BOX);
+	loginB.labelsize(32);
+
+	bg1.color(fl_rgb_color(217, 217, 217));
+	bg1.box(FL_FLAT_BOX);
+
+	bg2.color(fl_rgb_color(217, 217, 217));
+	bg2.box(FL_FLAT_BOX);
+
+	playAsG.callback();
+	playAsG.color(fl_rgb_color(169, 169, 169));
+	playAsG.box(FL_FLAT_BOX);
+	playAsG.labelsize(30);
+	playAsG.align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
+
+	playAsG.callback(toGameMenu, &pole);
+
+	Registrata->end();
+	menues.reg = Registrata;
+	Registrata->hide();
 
 	//группа игрового меню (1)
 	Fl_Group* mainMenu = new Fl_Group(0, 0, 1000, 600);
@@ -1029,6 +1105,15 @@ int main(int argc, char** argv)
 	return ret;
 }
 
+void toReg(Fl_Widget* w, void* data)
+{
+	if (menues.hello->visible())
+	{
+		menues.hello->hide();
+		menues.reg->show();
+	}
+}
+
 void rule_M_switch(Fl_Widget* w, void* data)
 {
 	Fl_Group* gr = (Fl_Group*)data;
@@ -1056,9 +1141,9 @@ void toGameMenu(Fl_Widget* w, void* data)
 	//обновление переменных
 	game_level = 0;
 
-	if (menues.hello->visible())
+	if (menues.reg->visible())
 	{
-		menues.hello->hide();
+		menues.reg->hide();
 		menues.main->show();
 	}
 	else if (menues.settings->visible())
