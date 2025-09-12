@@ -323,9 +323,11 @@ private:
 				anim->curX = anim->orig_x - (anim->cur_w - anim->orig_W) / 2;
 				anim->curY = anim->orig_y - (anim->cur_h - anim->orig_H) / 2;
 
+				
+
 				but->resize(anim->curX, anim->curY, anim->cur_w, anim->cur_h);
+
 				but->redraw();
-				but->parent()->parent()->redraw();
 
 				if (but->inFocus)
 				{
@@ -357,6 +359,7 @@ private:
 				but->resize(anim->curX, anim->curY, anim->cur_w, anim->cur_h);
 				but->redraw();
 				but->parent()->parent()->redraw();
+
 				bool done = anim->final_w == anim->cur_w and anim->final_h == anim->cur_h;
 				if (!done)
 				{
