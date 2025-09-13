@@ -8,6 +8,7 @@
 #include <string.h>
 #include <string>
 #include "resource.h"
+#include <fstream>
 
 //графика
 #include <FL/Fl.H>
@@ -34,6 +35,7 @@ void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int
 void calculate_numbers(char** field, int rows, int cols);
 void toReg(Fl_Widget* w, void* data);
 void dock(Fl_Widget* w, void* data);
+void registerUser(Fl_Widget* w, void* data);
 void timer(void* data);
 void counts_redraw();
 short flags_count();
@@ -59,10 +61,12 @@ void ButPressed(Fl_Widget* w, void* data);
 void again(Fl_Widget* w, void* data);
 void ShowSign(void* data);
 void toGameRule(Fl_Widget* w, void* data);
+void sign_reg_switch(Fl_Widget* w, void* data);
 void alertf(void* data);
 void drowField();
 void showField();
 void redraw();
+void showRegAlert(short n);
 
 //информация об уровнях
 struct GameLevel
@@ -688,6 +692,7 @@ struct widgets
 	hackBut* hBut;
 };
 
+
 widgets widget;
 
 //глобальные переменные для игры
@@ -721,7 +726,7 @@ int main(int argc, char** argv)
 	waveOutSetVolume(NULL, volume);*/
 
 	//ЕСЛИ НОВЫЕ ВИДЖЕТЫ НЕ ОТРИСОВЫВАЮТСЯ, НУЖНО ПРОВЕРИТЬ ФУНКЦИИ. ГДЕ-ТО ОНИ МОГУТ ЯВНО ПРИВОДИТЬСЯ К НЕВЕРНОМУ КЛАССУ!!!
-
+	
 	 /*Инициализация SDL с поддержкой аудио*/
 	if (SDL_Init(SDL_INIT_AUDIO) < 0) {
 		std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
@@ -755,25 +760,35 @@ int main(int argc, char** argv)
 	helloWin->end();
 	menues.hello = helloWin;
 
-	//группа входа
+	//группа входа/регистрации
 	Fl_Group* Registrata = new Fl_Group(0, 0, 1000, 600);
 
 	Fl_Box  bg1(50, 50, 401, 482);
 	Fl_Box bg2(550, 50, 401, 482);
 	Fl_Button playAsG(590, 75, 324, 387, "Играть в режиме Гостя");
 	Fl_Box noScore(590, 462, 324, 37, "счет сохраняться не будет*");
-	Fl_Box loginT(100, 60, 291, 64, "Вход");
-	Fl_Box user_name(70, 165, 113, 37, "Никнейм:");
+	Fl_Box loginT(100, 60, 291, 64, "Вход"); //4
 
-	Fl_Input pole(70, 202, 344, 41); //Тут надо реализовать поле ввода
+	Fl_Box user_name(70, 165, 113, 37, "Никнейм:"); //Ввод логина
+	Fl_Input* pole = new Fl_Input(70, 202, 344, 41);
 
-	Fl_Box pass(70, 270, 113, 37, "Пароль:");
+	Fl_Box pass(70, 270, 113, 37, "Пароль:"); //Ввод пароля
+	Fl_Input* pole2 = new Fl_Input(70, 307, 344, 41);
 
-	Fl_Input pole2(70, 307, 344, 41); // Тут тоже
+	Fl_Button loginB(70, 380, 344, 83, "Войти"); // 9
+	Fl_Box firstTime(63, 488, 203, 33, "Играете в первый раз?"); //10
+	Fl_Button reg(266, 488, 163, 33, "Регистрация"); //11
 
-	Fl_Button loginB(70, 380, 344, 83, "Войти");
-	Fl_Box firstTime(63, 488, 203, 33, "Играете в первый раз?");
-	Fl_Button reg(266, 488, 163, 33, "Регистрация");
+	Fl_Box regAlert(40, 200, 421, 100, " "); //12
+	regAlert.hide();
+
+	regAlert.box(FL_FLAT_BOX);
+	regAlert.color(FL_RED);
+
+	Fl_Input* inputs[] = { pole, pole2 };
+
+	reg.callback(sign_reg_switch, nullptr);
+	loginB.callback(registerUser, inputs);
 
 
 	reg.color(fl_rgb_color(128, 128, 128));
@@ -788,15 +803,15 @@ int main(int argc, char** argv)
 	loginT.box(FL_FLAT_BOX);
 	loginT.labelsize(48);
 
-	pole2.color(fl_rgb_color(142, 142, 142));
-	pole2.box(FL_FLAT_BOX);
+	pole2->color(fl_rgb_color(142, 142, 142));
+	pole2->box(FL_FLAT_BOX);
 
 	pass.color(fl_rgb_color(175, 175, 175));
 	pass.box(FL_FLAT_BOX);
 	pass.labelsize(18);
 
-	pole.color(fl_rgb_color(142, 142, 142));
-	pole.box(FL_FLAT_BOX);
+	pole->color(fl_rgb_color(142, 142, 142));
+	pole->box(FL_FLAT_BOX);
 
 	user_name.color(fl_rgb_color(175, 175, 175));
 	user_name.box(FL_FLAT_BOX);
@@ -1188,6 +1203,25 @@ void toGameRule(Fl_Widget* w, void* data)
 	{
 		menues.rules->hide();
 		menues.main->show();
+	}
+	
+}
+
+void sign_reg_switch(Fl_Widget* w, void* data)
+{
+	if (menues.reg->child(4)->label() == "Вход")
+	{
+		menues.reg->child(4)->label("Регистрация");
+		menues.reg->child(9)->label("Зарегистрироваться");
+		menues.reg->child(10)->label("Уже играли?");
+		menues.reg->child(11)->label("Вход");
+	}
+	else
+	{
+		menues.reg->child(4)->label("Вход");
+		menues.reg->child(9)->label("Войти");
+		menues.reg->child(10)->label("Играете в первый раз?");
+		menues.reg->child(11)->label("Регистрация");
 	}
 	
 }
@@ -1842,6 +1876,22 @@ void redraw()
 	GData.win->redraw();
 }
 
+void showRegAlert(void* num)
+{
+	menues.reg->child(12)->hide();
+
+
+
+
+
+
+
+
+
+
+
+}
+
 void again(Fl_Widget* w, void* data)
 {
 	for (short i = 0; i < levels[GData.level - 1].rows; i++)
@@ -2126,5 +2176,92 @@ void dock(Fl_Widget* w, void* data)
 		}
 
 		toGameMenu(w, GData.win);
+	}
+}
+
+void registerUser(Fl_Widget* w, void* data)
+{
+	Fl_Input** inps = (Fl_Input**)data;
+
+	string username, password, fileUsername;
+	while (true)
+	{
+		system("cls");
+
+		username = inps[0]->value();
+
+		password = inps[0]->value();
+
+		// проверяю на наличие логина в файле
+		// открыл файл в режиме чтения    
+		ifstream check("users.txt");
+		if (check.is_open())
+		{
+			while (check >> fileUsername)
+			{
+				if (fileUsername == username)
+				{
+					menues.reg->child(12)->label("Имя занято");
+					menues.reg->child(12)->show();
+					Fl::add_timeout(1.5, showRegAlert, nullptr);
+
+					break;
+				}
+			}
+			if (fileUsername != username) break;
+
+		}
+		else break;
+	}
+	// создаю файл с режимом app (альтернатива режиму "a" из того что мы изучали, то есть - добавление в файл информации)       
+	ofstream reg("users.txt", ios::app);
+	if (!reg.is_open())
+	{
+		cout << "Ошибка открытия файла для записи" << endl;
+		return;
+	}
+	// запись в файл логин, пароль и рекорд (сначала  0)
+	reg << username << " " << password << " " << 0 << endl;
+	reg.close();
+
+
+}
+
+bool loginUser(string username, string password)
+{
+	string fileUsername, filePassword, score, file_score;
+	bool loginSuccess = false;
+
+	// открыл файл в режиме чтения
+	ifstream login("users.txt");
+	if (!login.is_open())
+	{
+		cout << "Ошибка открытия файла для чтения!" << endl;
+		return false;
+	}
+	// Оператор >> читает данные из файла до первого пробела или перевода строки (мне так сказал дипсик и сказал что это будет удобно, так как если в файле будут храниться одинаковые
+	// пароли, то программа не выдаст сбои и отработает нормально)
+
+	while (login >> fileUsername >> filePassword >> file_score)
+	{
+		if (fileUsername == username and filePassword == password) {
+			loginSuccess = true;
+			score = file_score;
+			break;
+		}
+	}
+	login.close();
+
+	if (loginSuccess == true)
+	{
+		cout << "Вход выполнен успешно! Добро пожаловать, " << username << "! " << "Ваш рекорд: " << score << endl << endl;
+		
+		return true;
+	}
+	else
+	{
+		cout << "Ошибка: неверный логин или пароль!" << endl << endl;
+		
+		return false;
 	}
 }
