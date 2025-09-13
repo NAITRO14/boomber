@@ -36,6 +36,7 @@ void calculate_numbers(char** field, int rows, int cols);
 void toReg(Fl_Widget* w, void* data);
 void dock(Fl_Widget* w, void* data);
 void registerUser(Fl_Widget* w, void* data);
+bool loginUser(Fl_Widget* w, void* data);
 void timer(void* data);
 void counts_redraw();
 short flags_count();
@@ -62,11 +63,12 @@ void again(Fl_Widget* w, void* data);
 void ShowSign(void* data);
 void toGameRule(Fl_Widget* w, void* data);
 void sign_reg_switch(Fl_Widget* w, void* data);
+void reg_or_sign(Fl_Widget* w, void* data);
+void showRegAlert(void* num);
 void alertf(void* data);
 void drowField();
 void showField();
 void redraw();
-void showRegAlert(short n);
 
 //информация об уровнях
 struct GameLevel
@@ -115,6 +117,11 @@ struct screen
 	Fl_Group* gw1;
 	Fl_Group* gw2;
 	Fl_Group* gw3;
+};
+struct user
+{
+	string* username;
+	short score;
 };
 
 //данные об уровне
@@ -788,7 +795,7 @@ int main(int argc, char** argv)
 	Fl_Input* inputs[] = { pole, pole2 };
 
 	reg.callback(sign_reg_switch, nullptr);
-	loginB.callback(registerUser, inputs);
+	loginB.callback(reg_or_sign, inputs);
 
 
 	reg.color(fl_rgb_color(128, 128, 128));
@@ -1151,7 +1158,11 @@ void toGameMenu(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
 	menuBut* self = (menuBut*)w;
-	self->reset_state();
+	if (self)
+	{
+		self->reset_state();
+	}
+	
 
 	//обновление переменных
 	game_level = 0;
@@ -1224,6 +1235,18 @@ void sign_reg_switch(Fl_Widget* w, void* data)
 		menues.reg->child(11)->label("Регистрация");
 	}
 	
+}
+
+void reg_or_sign(Fl_Widget* w, void* data)
+{
+	if (w->label() == "Войти")
+	{
+		loginUser(w, data);
+	}
+	else
+	{
+		registerUser(w, data);
+	}
 }
 
 void exitf(Fl_Widget* w, void* data)
@@ -1879,17 +1902,6 @@ void redraw()
 void showRegAlert(void* num)
 {
 	menues.reg->child(12)->hide();
-
-
-
-
-
-
-
-
-
-
-
 }
 
 void again(Fl_Widget* w, void* data)
@@ -2184,34 +2196,29 @@ void registerUser(Fl_Widget* w, void* data)
 	Fl_Input** inps = (Fl_Input**)data;
 
 	string username, password, fileUsername;
-	while (true)
+
+
+	system("cls");
+
+	username = inps[0]->value();
+
+	password = inps[1]->value();
+
+	// проверяю на наличие логина в файле
+	// открыл файл в режиме чтения    
+	ifstream check("users.txt");
+	if (check.is_open())
 	{
-		system("cls");
-
-		username = inps[0]->value();
-
-		password = inps[0]->value();
-
-		// проверяю на наличие логина в файле
-		// открыл файл в режиме чтения    
-		ifstream check("users.txt");
-		if (check.is_open())
+		while (check >> fileUsername)
 		{
-			while (check >> fileUsername)
+			if (fileUsername == username)
 			{
-				if (fileUsername == username)
-				{
-					menues.reg->child(12)->label("Имя занято");
-					menues.reg->child(12)->show();
-					Fl::add_timeout(1.5, showRegAlert, nullptr);
-
-					break;
-				}
+				menues.reg->child(12)->label("Имя занято");
+				menues.reg->child(12)->show();
+				Fl::add_timeout(1.5, showRegAlert, nullptr);
+				return;
 			}
-			if (fileUsername != username) break;
-
 		}
-		else break;
 	}
 	// создаю файл с режимом app (альтернатива режиму "a" из того что мы изучали, то есть - добавление в файл информации)       
 	ofstream reg("users.txt", ios::app);
@@ -2224,13 +2231,19 @@ void registerUser(Fl_Widget* w, void* data)
 	reg << username << " " << password << " " << 0 << endl;
 	reg.close();
 
-
+	check.close();
 }
 
-bool loginUser(string username, string password)
+bool loginUser(Fl_Widget* w, void* data)
 {
-	string fileUsername, filePassword, score, file_score;
+	string fileUsername, filePassword, score, file_score, username, password;
 	bool loginSuccess = false;
+
+	Fl_Input** inps = (Fl_Input**)data;
+
+	username = inps[0]->value();
+
+	password = inps[1]->value();
 
 	// открыл файл в режиме чтения
 	ifstream login("users.txt");
@@ -2247,6 +2260,7 @@ bool loginUser(string username, string password)
 		if (fileUsername == username and filePassword == password) {
 			loginSuccess = true;
 			score = file_score;
+			toGameMenu(nullptr, nullptr);
 			break;
 		}
 	}
@@ -2260,7 +2274,9 @@ bool loginUser(string username, string password)
 	}
 	else
 	{
-		cout << "Ошибка: неверный логин или пароль!" << endl << endl;
+		menues.reg->child(12)->label("Неверный логин или пароль");
+		menues.reg->child(12)->show();
+		Fl::add_timeout(1.5, showRegAlert, nullptr);
 		
 		return false;
 	}
