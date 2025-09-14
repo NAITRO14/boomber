@@ -876,13 +876,17 @@ int main(int argc, char** argv)
 	Fl_Box prof_Played(688, 232, 63, 30, "Игр:");
 	Fl_Box line2(688, 263, 228, 1);
 
+	Fl_Button logOut(680, 340, 74, 60, "Выйти");
+
 	line2.color(FL_BLACK);
 	line2.box(FL_FLAT_BOX);
 
 	prof_Played.color(fl_rgb_color(169, 169, 169));
+	prof_Played.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
 	prof_Played.labelsize(18);
 
 	prof_score.color(fl_rgb_color(169, 169, 169));
+	prof_score.align(FL_ALIGN_INSIDE | FL_ALIGN_LEFT);
 	prof_score.labelsize(18);
 
 	line1.color(FL_BLACK);
