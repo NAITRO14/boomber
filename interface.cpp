@@ -37,6 +37,8 @@ void toReg(Fl_Widget* w, void* data);
 void dock(Fl_Widget* w, void* data);
 void registerUser(Fl_Widget* w, void* data);
 bool loginUser(Fl_Widget* w, void* data);
+void updateUserScore(string username);
+short calculateScore(short opened_safe_cells, short seconds_played);
 void timer(void* data);
 void counts_redraw();
 short flags_count();
@@ -105,6 +107,8 @@ struct menu
 	Fl_Group* hard;
 	Fl_Group* rules;
 	Fl_Group* reg;
+	Fl_Group* prof;
+
 };
 
 //хранилище экранов победы/поражения
@@ -118,11 +122,14 @@ struct screen
 	Fl_Group* gw2;
 	Fl_Group* gw3;
 };
-struct user
+struct users
 {
-	string* username;
-	short score;
-};
+	string username;
+	int score;
+	bool loggined;
+
+	short opend_cells;
+}user;
 
 //данные об уровне
 const GameLevel levels[] =
@@ -714,6 +721,8 @@ int game_level = 0;
 string GTf, GMf;
 string Mfound; string Mleft; string complT; string buf;
 
+string str_score;
+
 ChangedT* foundB; ChangedT* leftB;
 ChangedT* complexity;
 
@@ -736,17 +745,20 @@ int main(int argc, char** argv)
 	
 	 /*Инициализация SDL с поддержкой аудио*/
 	if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+		ShowConsole();
 		std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
 		return 1;
 	}
 	 //Инициализация SDL_mixer
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+		ShowConsole();
 		std::cerr << "Mix_OpenAudio failed: " << Mix_GetError() << std::endl;
 		SDL_Quit();
 		return 1;
 	}
 	Mix_Chunk* sound = Mix_LoadWAV("sounds/on_click.wav");
 	if (!sound) {
+		ShowConsole();
 		std::cerr << "Failed to load sound: " << Mix_GetError() << std::endl;
 		Mix_CloseAudio();
 		SDL_Quit();
@@ -796,7 +808,6 @@ int main(int argc, char** argv)
 
 	reg.callback(sign_reg_switch, nullptr);
 	loginB.callback(reg_or_sign, inputs);
-
 
 	reg.color(fl_rgb_color(128, 128, 128));
 	reg.box(FL_FLAT_BOX);
@@ -850,26 +861,69 @@ int main(int argc, char** argv)
 	menues.reg = Registrata;
 	Registrata->hide();
 
+
+
+
+	//Окно профиля
+	Fl_Group* profile = new Fl_Group(665, 93, 274, 357);
+
+	Fl_Box profBG(665, 102, 274, 347);
+	Fl_Box prof_usern(730, 93, 144, 46, "pipi_kaka"); //Никнейм при регистрации (Или же Guest при режиме гостя)
+	Fl_Box prof_score(688, 171, 63, 30, "Очки:");
+	Fl_Box line1(688, 202, 228, 1);
+	Fl_Box prof_Played(688, 232, 63, 30, "Игр:");
+	Fl_Box line2(688, 263, 228, 1);
+
+	line2.color(FL_BLACK);
+	line2.box(FL_FLAT_BOX);
+
+	prof_Played.color(fl_rgb_color(169, 169, 169));
+	prof_Played.labelsize(18);
+
+	prof_score.color(fl_rgb_color(169, 169, 169));
+	prof_score.labelsize(18);
+
+	line1.color(FL_BLACK);
+	line1.box(FL_FLAT_BOX);
+
+	prof_usern.labelsize(20);
+	prof_usern.box(FL_FLAT_BOX);
+	prof_usern.color(fl_rgb_color(134, 134, 134));
+
+	profBG.box(FL_FLAT_BOX);
+	profBG.color(fl_rgb_color(169, 169, 169));
+
+	profile->end();
+	profile->hide();
+
+	menues.prof = profile;
+
+
+
+
 	//группа игрового меню (1)
 	Fl_Group* mainMenu = new Fl_Group(0, 0, 1000, 600);
 
 	menuBut start(100, 150, 150, 75, "Начать игру");
 	menuBut rules(100, 250, 150, 75, "Правила");
 	menuBut exit(100, 350, 150, 75, "Выход");
-
+	
 	BoxForBut Tstart(300, -32, 291, 32, "Перейти к настройке сложности");
 	BoxForBut Trules(1000, 272, 291, 32, "Ознакомиться с правилами игры");
 	BoxForBut Texit(300, 600, 291, 32, "Закрыть приложение");
 
+	menuBut profBut(800, 500, 125, 60, "Профиль"); // Или Регистрация
 	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.5");
 	version.box(FL_NO_BOX);
 
+	profBut.callback(reg_or_sign, nullptr);
 	rules.callback(toGameRule, &win);
 	start.callback(toGameSettings, &win);
 	exit.callback(exitf, nullptr);
 	mainMenu->hide();
 	mainMenu->end();
 	menues.main = mainMenu;
+
 
 
 
@@ -1243,10 +1297,26 @@ void reg_or_sign(Fl_Widget* w, void* data)
 	{
 		loginUser(w, data);
 	}
-	else
+	else if(w->label() == "Зарегистрироваться")
 	{
 		registerUser(w, data);
 	}
+	else if (w->label() == "Профиль")
+	{
+		if (menues.prof->visible())
+		{
+			menues.prof->hide();
+		}
+		else
+		{
+			str_score = "Очки: " + to_string(user.score);
+			menues.prof->child(1)->label((user.username).c_str());
+			menues.prof->child(2)->label(str_score.c_str());
+			menues.prof->show();
+		}
+		
+	}
+
 }
 
 void exitf(Fl_Widget* w, void* data)
@@ -1790,7 +1860,7 @@ void winOrFail()
 		{
 			if (!GData.field)return;
 			if (!GData.field[i][j])return;
-			if (BField[i][j]->color() == fl_rgb_color(247, 132, 25) and  GData.field[i][j] == '*')
+			if (BField[i][j]->color() == fl_rgb_color(247, 132, 25) and GData.field[i][j] == '*')
 			{
 				count++;
 			}
@@ -1799,7 +1869,20 @@ void winOrFail()
 
 	if (count >= levels[GData.level - 1].mines_count)
 	{
+		count = 0;
 		screens.gw1->show();
+		for (int i = 0; i < levels[GData.level - 1].rows; i++)
+		{
+			for (int j = 0; j < levels[GData.level - 1].cols; j++)
+			{
+				if (BField[i][j]->box() == FL_DOWN_BOX)
+				{
+					count++;
+				}
+			}
+		}
+		user.opend_cells = count;
+		updateUserScore(user.username);
 		showField();
 		Fl::remove_timeout(timer);
 	}
@@ -2258,12 +2341,16 @@ bool loginUser(Fl_Widget* w, void* data)
 	while (login >> fileUsername >> filePassword >> file_score)
 	{
 		if (fileUsername == username and filePassword == password) {
+			user.loggined = true;
 			loginSuccess = true;
 			score = file_score;
 			toGameMenu(nullptr, nullptr);
 			break;
 		}
 	}
+
+	user.username = username;
+	user.score = stoi(score);
 	login.close();
 
 	if (loginSuccess == true)
@@ -2280,4 +2367,49 @@ bool loginUser(Fl_Widget* w, void* data)
 		
 		return false;
 	}
+}
+
+short calculateScore(short opened_safe_cells, short seconds_played)
+{
+	short record = opened_safe_cells * 5 - seconds_played * 2;
+	return (record < 0) ? 0 : record; // Защита от отрицательных очков
+}
+
+void updateUserScore(string username) {
+	ofstream temp_file("temp_users.txt");
+	ifstream original_file("users.txt");
+	if (!original_file.is_open() || !temp_file.is_open()) {
+		cout << "Ошибка открытия файлов для обновления рекорда" << endl;
+		return;
+	}
+
+	string file_username, file_password;
+	short new_score = calculateScore(user.opend_cells, GData.GTime);
+	short file_score;
+	bool user_found = false;
+	while (original_file >> file_username >> file_password >> file_score) {
+		if (file_username == username) {
+			if (new_score > file_score) {
+				temp_file << file_username << " " << file_password << " " << new_score << endl;
+				user.score = new_score;
+				user_found = true;
+			}
+			else {
+				temp_file << file_username << " " << file_password << " " << file_score << endl;
+			}
+		}
+		else {
+			temp_file << file_username << " " << file_password << " " << file_score << endl;
+		}
+	}
+	original_file.close();
+	temp_file.close();
+
+	user.score = new_score;
+
+	remove("users.txt");
+	rename("temp_users.txt", "users.txt");
+	/*if (user_found) {
+		cout << "Рекорд обновлен! Новый рекорд: " << new_score << " очков" << endl;
+	}*/
 }
