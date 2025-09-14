@@ -560,6 +560,13 @@ void save_field_to_file(char** _field, int rows, int cols, const char* _filename
     fprintf(file, "+\n");
 
     fclose(file);
+    // удаление игрового поля после записи на файл
+
+    for (int i = 0; i < rows; i++)
+    {
+         delete[] _field[i];
+    }
+    delete[] _field;
 }
 void open_empty(char** _field, bool** _opened, int rows, int cols, int _row, int _col, int& opened_safe_cells)
 {
@@ -669,7 +676,8 @@ void registerUser()
 
 bool loginUser(string username, string password)
 {
-    string fileUsername, filePassword, score, file_score;
+    string fileUsername, filePassword, score;
+    int file_score = 0;
     bool loginSuccess = false;
 
     // открыл файл в режиме чтения
@@ -684,7 +692,7 @@ bool loginUser(string username, string password)
 
     while (login >> fileUsername >> filePassword >> file_score)
     {
-        if (fileUsername == username and filePassword == password) {
+        if (fileUsername == username && filePassword == password) {
             loginSuccess = true;
             score = file_score;
             break;
