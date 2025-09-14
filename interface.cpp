@@ -122,6 +122,7 @@ struct users
 {
 	string username;
 	int score;
+	int games;
 	bool loggined;
 	bool isGuest;
 
@@ -722,7 +723,7 @@ int game_level = 0;
 string GTf, GMf;
 string Mfound; string Mleft; string complT; string buf;
 
-string str_score;
+string str_score; string str_games;
 
 ChangedT* foundB; ChangedT* leftB;
 ChangedT* complexity;
@@ -786,7 +787,7 @@ int main(int argc, char** argv)
 
 	Fl_Box  bg1(50, 50, 401, 482);
 	Fl_Box bg2(550, 50, 401, 482);
-	Fl_Button playAsG(590, 75, 324, 387, "Играть в режиме Гостя");
+	Fl_Button playAsG(590, 75, 324, 387, "Играть как Гость");
 	Fl_Box noScore(590, 462, 324, 37, "счет сохраняться не будет*");
 	Fl_Box loginT(100, 60, 291, 64, "Вход"); //4
 
@@ -851,13 +852,12 @@ int main(int argc, char** argv)
 	bg2.color(fl_rgb_color(217, 217, 217));
 	bg2.box(FL_FLAT_BOX);
 
-	playAsG.callback();
 	playAsG.color(fl_rgb_color(169, 169, 169));
 	playAsG.box(FL_FLAT_BOX);
 	playAsG.labelsize(30);
 	playAsG.align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
 
-	playAsG.callback(toGameMenu, &pole);
+	playAsG.callback(toGameMenu, nullptr);
 
 	Registrata->end();
 	menues.reg = Registrata;
@@ -1213,10 +1213,19 @@ void rule_M_switch(Fl_Widget* w, void* data)
 void toGameMenu(Fl_Widget* w, void* data)
 {
 	Fl_Double_Window* win = (Fl_Double_Window*)data;
-	menuBut* self = (menuBut*)w;
-	if (self)
+	
+
+	if (w)
 	{
-		self->reset_state();
+		if (w->label() == "Играть как Гость")
+		{
+			menues.main->child(6)->label("Вход");
+		}
+		else
+		{
+			menuBut* self = (menuBut*)w;
+			self->reset_state();
+		}
 	}
 	
 
@@ -1252,6 +1261,9 @@ void toGameMenu(Fl_Widget* w, void* data)
 		menues.main->show();
 		choose_level(w, data);
 	}
+
+	
+	
 }
 
 void toGameRule(Fl_Widget* w, void* data)
@@ -1295,15 +1307,9 @@ void sign_reg_switch(Fl_Widget* w, void* data)
 
 void reg_or_sign(Fl_Widget* w, void* data)
 {
-	if (w->label() == "Войти")
-	{
-		loginUser(w, data);
-	}
-	else if(w->label() == "Зарегистрироваться")
-	{
-		registerUser(w, data);
-	}
-	else if (w->label() == "Профиль")
+	menuBut* self = (menuBut*)w;
+	self->reset_state();
+	if (w->label() == "Профиль")
 	{
 		if (menues.prof->visible())
 		{
@@ -1312,11 +1318,31 @@ void reg_or_sign(Fl_Widget* w, void* data)
 		else
 		{
 			str_score = "Очки: " + to_string(user.score);
-			menues.prof->child(1)->label((user.username).c_str());
+			str_games = "Игр: " + to_string(user.games);
+
 			menues.prof->child(2)->label(str_score.c_str());
+			menues.prof->child(4)->label(str_games.c_str());
+
+			menues.prof->child(1)->label((user.username).c_str());
+
 			menues.prof->show();
 		}
 		
+	}
+	else if (w->label() == "Войти")
+	{
+		menues.main->child(6)->label("Профиль");
+		loginUser(w, data);
+		
+	}
+	else if (w->label() == "Вход")
+	{
+		menues.main->hide();
+		menues.reg->show();
+	}
+	else if (w->label() == "Зарегистрироваться")
+	{
+		registerUser(w, data);
 	}
 
 }
