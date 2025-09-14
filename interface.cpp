@@ -115,18 +115,15 @@ struct menu
 struct screen
 {
 	Fl_Group* gl1;
-	Fl_Group* gl2;
-	Fl_Group* gl3;
 
 	Fl_Group* gw1;
-	Fl_Group* gw2;
-	Fl_Group* gw3;
 };
 struct users
 {
 	string username;
 	int score;
 	bool loggined;
+	bool isGuest;
 
 	short opend_cells;
 }user;
@@ -437,6 +434,10 @@ public:
 		{
 			if (click) {
 				Mix_PlayChannel(-1, click, 0);
+			}
+			if (label() != "Профиль" and menues.prof->visible())
+			{
+				menues.prof->hide();
 			}
 			
 		}break;
@@ -779,6 +780,7 @@ int main(int argc, char** argv)
 	helloWin->end();
 	menues.hello = helloWin;
 
+	user.isGuest = 0;
 	//группа входа/регистрации
 	Fl_Group* Registrata = new Fl_Group(0, 0, 1000, 600);
 
@@ -2405,11 +2407,6 @@ void updateUserScore(string username) {
 	original_file.close();
 	temp_file.close();
 
-	user.score = new_score;
-
 	remove("users.txt");
 	rename("temp_users.txt", "users.txt");
-	/*if (user_found) {
-		cout << "Рекорд обновлен! Новый рекорд: " << new_score << " очков" << endl;
-	}*/
 }
