@@ -453,6 +453,19 @@ public:
 	}
 };
 
+class regBut : public Fl_Button
+{
+public:
+	regBut(int X, int Y, int W, int H, const char* L = 0)
+		: Fl_Button(X, Y, W, H, L)
+	{
+		clear_visible_focus();
+		color(fl_rgb_color(128, 128, 128));
+		labelsize(16);
+		align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
+	}
+};
+
 //выезжающие тексты
 class BoxForBut : public Fl_Box
 {
@@ -787,8 +800,8 @@ int main(int argc, char** argv)
 
 	Fl_Box  bg1(50, 50, 401, 482);
 	Fl_Box bg2(550, 50, 401, 482);
-	Fl_Button playAsG(590, 75, 324, 387, "Играть как Гость");
-	Fl_Box noScore(590, 462, 324, 37, "счет сохраняться не будет*");
+	Fl_Box noScore(590, 460, 324, 37, "счет сохраняться не будет*");
+	regBut playAsG(590, 75, 324, 387, "Играть как Гость");
 	Fl_Box loginT(100, 60, 291, 64, "Вход"); //4
 
 	Fl_Box user_name(70, 165, 113, 37, "Никнейм:"); //Ввод логина
@@ -797,9 +810,9 @@ int main(int argc, char** argv)
 	Fl_Box pass(70, 270, 113, 37, "Пароль:"); //Ввод пароля
 	Fl_Input* pole2 = new Fl_Input(70, 307, 344, 41);
 
-	Fl_Button loginB(70, 380, 344, 83, "Войти"); // 9
+	regBut loginB(70, 380, 344, 83, "Войти"); // 9
 	Fl_Box firstTime(63, 488, 203, 33, "Играете в первый раз?"); //10
-	Fl_Button reg(266, 488, 163, 33, "Регистрация"); //11
+	regBut reg(266, 488, 163, 33, "Регистрация"); //11
 
 	Fl_Box regAlert(40, 200, 421, 100, " "); //12
 	regAlert.hide();
@@ -811,10 +824,6 @@ int main(int argc, char** argv)
 
 	reg.callback(sign_reg_switch, nullptr);
 	loginB.callback(reg_or_sign, inputs);
-
-	reg.color(fl_rgb_color(128, 128, 128));
-	reg.box(FL_FLAT_BOX);
-	reg.labelsize(16);
 
 	firstTime.color(fl_rgb_color(183, 183, 183));
 	firstTime.box(FL_FLAT_BOX);
@@ -839,11 +848,9 @@ int main(int argc, char** argv)
 	user_name.labelsize(18);
 
 	noScore.color(fl_rgb_color(128, 128, 128));
-	noScore.box(FL_FLAT_BOX);
+	noScore.box(FL_UP_BOX);
 	noScore.labelsize(20);
 
-	loginB.color(fl_rgb_color(128, 128, 128));
-	loginB.box(FL_FLAT_BOX);
 	loginB.labelsize(32);
 
 	bg1.color(fl_rgb_color(217, 217, 217));
@@ -852,10 +859,11 @@ int main(int argc, char** argv)
 	bg2.color(fl_rgb_color(217, 217, 217));
 	bg2.box(FL_FLAT_BOX);
 
+	/*
+	playAsG.box(FL_FLAT_BOX);*/
 	playAsG.color(fl_rgb_color(169, 169, 169));
-	playAsG.box(FL_FLAT_BOX);
 	playAsG.labelsize(30);
-	playAsG.align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
+	
 
 	playAsG.callback(toGameMenu, nullptr);
 
@@ -869,14 +877,15 @@ int main(int argc, char** argv)
 	//Окно профиля
 	Fl_Group* profile = new Fl_Group(665, 93, 274, 357);
 
-	Fl_Box profBG(665, 102, 274, 347);
+	Fl_Box profBG(665, 102, 274, 347); //<--------------
 	Fl_Box prof_usern(730, 93, 144, 46, "pipi_kaka"); //Никнейм при регистрации (Или же Guest при режиме гостя)
 	Fl_Box prof_score(688, 171, 63, 30, "Очки:");
 	Fl_Box line1(688, 202, 228, 1);
 	Fl_Box prof_Played(688, 232, 63, 30, "Игр:");
 	Fl_Box line2(688, 263, 228, 1);
 
-	Fl_Button logOut(680, 340, 74, 60, "Выйти");
+	regBut logOut(670, 384, 264, 60, "Выйти");
+	logOut.callback(reg_or_sign, nullptr);
 
 	line2.color(FL_BLACK);
 	line2.box(FL_FLAT_BOX);
@@ -919,7 +928,7 @@ int main(int argc, char** argv)
 	BoxForBut Texit(300, 600, 291, 32, "Закрыть приложение");
 
 	menuBut profBut(800, 500, 125, 60, "Профиль"); // Или Регистрация
-	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.5");
+	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.7");
 	version.box(FL_NO_BOX);
 
 	profBut.callback(reg_or_sign, nullptr);
@@ -1312,9 +1321,10 @@ void sign_reg_switch(Fl_Widget* w, void* data)
 void reg_or_sign(Fl_Widget* w, void* data)
 {
 	menuBut* self = (menuBut*)w;
-	self->reset_state();
 	if (w->label() == "Профиль")
 	{
+		
+		self->reset_state();
 		if (menues.prof->visible())
 		{
 			menues.prof->hide();
@@ -1339,8 +1349,18 @@ void reg_or_sign(Fl_Widget* w, void* data)
 		loginUser(w, data);
 		
 	}
+	else if (w->label() == "Выйти")
+	{
+		user.loggined = false;
+		menues.main->child(6)->label("Вход");
+		menues.prof->hide();
+		user.username = "";
+		str_score = "";
+		user.score = 0;
+	}
 	else if (w->label() == "Вход")
 	{
+		self->reset_state();
 		menues.main->hide();
 		menues.reg->show();
 	}
