@@ -1,2 +1,4 @@
-супер_пользователь 12345 27
+super 12345 27
 naitro 1 228
+super_man 1asd2 0
+naitro1 123 290

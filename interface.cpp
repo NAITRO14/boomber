@@ -9,6 +9,8 @@
 #include <string>
 #include "resource.h"
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
 //графика
 #include <FL/Fl.H>
@@ -18,6 +20,7 @@
 #include <FL/fl_draw.H>
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Browser.H>
 
 //звуки
 #include <SDL2/SDL.h>
@@ -66,6 +69,7 @@ void ShowSign(void* data);
 void toGameRule(Fl_Widget* w, void* data);
 void sign_reg_switch(Fl_Widget* w, void* data);
 void reg_or_sign(Fl_Widget* w, void* data);
+void showLids(Fl_Widget* w, void* data);
 void showRegAlert(void* num);
 void alertf(void* data);
 void drowField();
@@ -108,6 +112,7 @@ struct menu
 	Fl_Group* rules;
 	Fl_Group* reg;
 	Fl_Group* prof;
+	Fl_Group* liders;
 
 };
 
@@ -128,6 +133,14 @@ struct users
 
 	short opend_cells;
 }user;
+struct lids_
+{
+	string* name;
+	short* score;
+
+
+
+}_lids;
 
 //данные об уровне
 const GameLevel levels[] =
@@ -700,6 +713,19 @@ public:
 
 };
 
+class regInp : public Fl_Input
+{
+public:
+	regInp(int X, int Y, int W, int H)
+		:Fl_Input(X, Y, W, H)
+	{
+		maximum_size(10);
+		color(fl_rgb_color(175, 175, 175));
+		labelsize(18);
+	}
+};
+
+
 //общие элементы сложностей
 struct levels_w
 {
@@ -780,7 +806,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	HideConsole();
+	ShowConsole();
 	SetConsoleOutputCP(CP_UTF8); SetConsoleCP(CP_UTF8); srand(time(NULL));
 	Fl_Double_Window win(1000, 600, "Boomber");
 	GData.win = &win; GData.GTime = 0;
@@ -804,11 +830,11 @@ int main(int argc, char** argv)
 	regBut playAsG(590, 75, 324, 387, "Играть как Гость");
 	Fl_Box loginT(100, 60, 291, 64, "Вход"); //4
 
-	Fl_Box user_name(70, 165, 113, 37, "Никнейм:"); //Ввод логина
-	Fl_Input* pole = new Fl_Input(70, 202, 344, 41);
+	Fl_Box user_name(71, 170, 113, 37, "Никнейм:"); //Ввод логина
+	regInp* pole = new regInp(70, 202, 344, 41);
 
-	Fl_Box pass(70, 270, 113, 37, "Пароль:"); //Ввод пароля
-	Fl_Input* pole2 = new Fl_Input(70, 307, 344, 41);
+	Fl_Box pass(71, 275, 113, 37, "Пароль:"); //Ввод пароля
+	regInp* pole2 = new regInp(70, 307, 344, 41);
 
 	regBut loginB(70, 380, 344, 83, "Войти"); // 9
 	Fl_Box firstTime(63, 488, 203, 33, "Играете в первый раз?"); //10
@@ -830,18 +856,12 @@ int main(int argc, char** argv)
 	firstTime.labelsize(16);
 
 	loginT.color(fl_rgb_color(169, 169, 169));
-	loginT.box(FL_FLAT_BOX);
+	loginT.box(FL_ENGRAVED_BOX);
 	loginT.labelsize(48);
-
-	pole2->color(fl_rgb_color(142, 142, 142));
-	pole2->box(FL_FLAT_BOX);
 
 	pass.color(fl_rgb_color(175, 175, 175));
 	pass.box(FL_FLAT_BOX);
 	pass.labelsize(18);
-
-	pole->color(fl_rgb_color(142, 142, 142));
-	pole->box(FL_FLAT_BOX);
 
 	user_name.color(fl_rgb_color(175, 175, 175));
 	user_name.box(FL_FLAT_BOX);
@@ -854,10 +874,10 @@ int main(int argc, char** argv)
 	loginB.labelsize(32);
 
 	bg1.color(fl_rgb_color(217, 217, 217));
-	bg1.box(FL_FLAT_BOX);
+	bg1.box(FL_ROUNDED_BOX);
 
 	bg2.color(fl_rgb_color(217, 217, 217));
-	bg2.box(FL_FLAT_BOX);
+	bg2.box(FL_ROUNDED_BOX);
 
 	/*
 	playAsG.box(FL_FLAT_BOX);*/
@@ -912,6 +932,29 @@ int main(int argc, char** argv)
 	profile->hide();
 
 	menues.prof = profile;
+	
+
+
+
+	//меню таблицы лидеров
+	Fl_Group* liderBoard = new Fl_Group(0, 0, 1000, 600);
+
+	Fl_Browser* browser = new Fl_Browser(370, 50, 260, 500);
+
+	menuBut backFromLids(20, 530, 120, 60, "В меню");
+	Fl_Box place(370, 35, 50, 10, "Место");
+
+	Fl_Box u_name(475, 35, 50, 10, "Имя");
+
+	Fl_Box u_score(580, 35, 50, 10, "Счет");
+
+	backFromLids.callback(toGameMenu, nullptr);
+	browser->labelsize(30);
+	browser->textfont(FL_COURIER);
+
+	liderBoard->end();
+	liderBoard->hide();
+	menues.liders = liderBoard;
 
 
 
@@ -928,8 +971,11 @@ int main(int argc, char** argv)
 	BoxForBut Texit(300, 600, 291, 32, "Закрыть приложение");
 
 	menuBut profBut(800, 500, 125, 60, "Профиль"); // Или Регистрация
+	menuBut lids(880, 20, 100, 50, "Лидеры");
 	BoxForBut version(860, 580, 140, 20, "Версия: alpha0.7");
 	version.box(FL_NO_BOX);
+
+	lids.callback(showLids, nullptr);
 
 	profBut.callback(reg_or_sign, nullptr);
 	rules.callback(toGameRule, &win);
@@ -1274,6 +1320,11 @@ void toGameMenu(Fl_Widget* w, void* data)
 		menues.main->show();
 		choose_level(w, data);
 	}
+	else if (menues.liders->visible())
+	{
+		menues.liders->hide();
+		menues.main->show();
+	}
 
 	
 	
@@ -1369,6 +1420,81 @@ void reg_or_sign(Fl_Widget* w, void* data)
 		registerUser(w, data);
 	}
 
+}
+
+void showLids(Fl_Widget* w, void* data)
+{
+	menuBut* b = (menuBut*)w;
+	b->reset_state();
+	menues.main->hide();
+	menues.liders->show();
+
+	Fl_Browser* br = (Fl_Browser*)menues.liders->child(0);
+
+	br->clear();
+	
+
+	ifstream file("users.txt");
+	if (!file.is_open()) {
+		cout << "Ошибка открытия файлов для обновления рекорда" << endl;
+		return;
+	}
+
+	string file_username, file_password;
+	short file_score;
+	short count = 0;
+
+	while (file >> file_username >> file_password >> file_score) 
+	{
+		count += 1;
+	}
+	file.clear();
+	file.seekg(0, ios::beg);
+
+	_lids.name = new string[count];
+	_lids.score = new short[count];
+
+	short i = 0;
+	while (file >> file_username >> file_password >> file_score)
+	{
+		_lids.name[i] = file_username;
+
+		_lids.score[i] = file_score;
+
+		i += 1;
+	}
+
+	short tmp1; string tmp2;
+	for (short i = 0; i < count; i++)
+	{
+		for (short j = 0; j < count-1; j++)
+		{
+			tmp1 = _lids.score[j]; tmp2 = _lids.name[j];
+			if (_lids.score[j] < _lids.score[j + 1])
+			{
+				_lids.score[j] = _lids.score[j + 1];
+				_lids.score[j + 1] = tmp1;
+
+				_lids.name[j] = _lids.name[j + 1];
+				_lids.name[j + 1] = tmp2;
+
+			}
+		}
+	}
+
+	stringstream line;
+	for (short i = 0; i < count; i++) {
+		line << left << setw(5) << (i + 1) << " " << left << setw(20) << _lids.name[i] << " " << left << setw(4) << _lids.score[i];
+		
+
+		br->add(line.str().c_str());
+		line.str("");
+		line.clear();
+	}
+
+	
+
+	file.close();
 }
 
 void exitf(Fl_Widget* w, void* data)
@@ -2336,8 +2462,9 @@ void registerUser(Fl_Widget* w, void* data)
 	system("cls");
 
 	username = inps[0]->value();
-
 	password = inps[1]->value();
+
+	if (username == "" || password == "") return;
 
 	// проверяю на наличие логина в файле
 	// открыл файл в режиме чтения    
@@ -2376,9 +2503,13 @@ bool loginUser(Fl_Widget* w, void* data)
 
 	Fl_Input** inps = (Fl_Input**)data;
 
+	
+
 	username = inps[0]->value();
 
 	password = inps[1]->value();
+
+	if (username == "" || password == "") return 0;
 
 	// открыл файл в режиме чтения
 	ifstream login("users.txt");
@@ -2396,13 +2527,15 @@ bool loginUser(Fl_Widget* w, void* data)
 			user.loggined = true;
 			loginSuccess = true;
 			score = file_score;
+
+			user.username = username;
+			user.score = stoi(score);
 			toGameMenu(nullptr, nullptr);
 			break;
 		}
 	}
 
-	user.username = username;
-	user.score = stoi(score);
+	
 	login.close();
 
 	if (loginSuccess == true)
